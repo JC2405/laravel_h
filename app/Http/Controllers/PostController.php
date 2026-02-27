@@ -13,66 +13,34 @@ use PHPUnit\Framework\MockObject\Stub\ReturnReference;
 class PostController extends Controller
 {
 
-    public function __construct(protected PostService $service ){}
- 
-    /**
-     * Display a listing of the resource.
-     */
+      public function __construct(protected PostService $service) {}
+
     public function index()
     {
-        $posts = $this -> service ->getAll();
-
-        return view('posts.index', compact('posts'));
+        $posts = $this->service->getAll();
+        return response()->json($posts);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        Return view('post_form',['post' => new Post()]);
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(CreatePostRequest $request)
     {
-      
-       $this -> service -> create ($request->validated());
-
-        return Redirect()->route('posts.index') ->with('message', 'Post Creado Exitosamente');
+        $post = $this->service->create($request->validated());
+        return response()->json($post, 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function show(Post $post)
     {
-        //
+        return response()->json($post);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    public function update(Request $request, Post $post)
     {
-        //
+        $post->update($request->validated());
+        return response()->json($post);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function destroy(Post $post)
     {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        $post->delete();
+        return response()->json(['message' => 'Post eliminado']);
     }
 }
