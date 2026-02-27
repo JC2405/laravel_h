@@ -4,16 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\Post;
 use Illuminate\Http\Request;
-use Illuminate\Routing\Redirector;
 use App\Http\Requests\Post\CreatePostRequest;
+use App\Http\Requests\Post\UpdatePostRequest;
 use App\Services\Post\PostService;
-
-use PHPUnit\Framework\MockObject\Stub\ReturnReference;
 
 class PostController extends Controller
 {
-
-      public function __construct(protected PostService $service) {}
+    public function __construct(protected PostService $service) {}
 
     public function index()
     {
@@ -32,7 +29,7 @@ class PostController extends Controller
         return response()->json($post);
     }
 
-    public function update(Request $request, Post $post)
+    public function update(UpdatePostRequest $request, Post $post)
     {
         $post->update($request->validated());
         return response()->json($post);

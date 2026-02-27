@@ -1,6 +1,9 @@
 <?php
 
+use App\Http\Controllers\PersonasController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PostController;
 
-Route::post('posts', PostController::class,'store');
+Route::apiResource('posts', PostController::class);
+Route::apiResource('personas',PersonasController::class);
+
