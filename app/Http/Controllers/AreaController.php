@@ -28,29 +28,24 @@ class AreaController extends Controller
         return response()->json($crearArea,201);
     }
 
-
-    public function show(AreaModel $areaModel)
+    public function show($idArea)
     {
-        return response()->json($areaModel);
+        $area = AreaModel::findOrFail($idArea);
+        return response()->json($area);
     }
 
-
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdateAreaRequest $request , AreaModel $areaModel)
+    public function update(UpdateAreaRequest $request, $idArea)
     {
-        $areaModel->update($request->validated());
-        return response()->json($areaModel);
+        $area = AreaModel::findOrFail($idArea);
+        $this->service->update($area, $request->validated());
+        return response()->json($area->fresh());
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(AreaModel $areaModel)
+    
+    public function destroy($idArea)
     {
-        $areaModel->delete();
-        return response()->json(['message' => 'Area Eliminada']);
+        $area = AreaModel::findOrFail($idArea);
+        $this->service->delete($area);
+        return response()->json(['message' => 'Área eliminada correctamente']);
     }
 }

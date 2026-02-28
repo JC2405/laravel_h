@@ -18,4 +18,16 @@ class AreaService
     {
         return AreaModel::create($data);
     }
+
+
+     public function update(AreaModel $areaModel, array $data): AreaModel
+    {
+        $areaModel->update($data);
+        return $areaModel->fresh(); 
+    }
+
+    public function delete(AreaModel $areaModel): void
+    {
+        $areaModel->delete();
+    }
 }

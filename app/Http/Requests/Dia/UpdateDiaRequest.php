@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Requests\Personas;
+namespace App\Http\Requests\Dia;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class CreatePersonasRequest extends FormRequest
+class UpdateDiaRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,9 +22,7 @@ class CreatePersonasRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nombre'=> 'required|string|maax:255',
-            'apellido' => 'required|string',
-            'password' => 'required|string',   
+            'nombre'=>'required|string|max:255'
         ];
     }
 }
