@@ -10,7 +10,7 @@ class AreaService
 {
     public function getAll():LengthAwarePaginator
     {
-        return AreaModel::latest()->paginate(AreaModel::PAGINATION);
+        return AreaModel::orderBy('idArea')->paginate(AreaModel::PAGINATION);
     }
 
 

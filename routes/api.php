@@ -6,7 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 //api
-Route::get('listarAreas',[AreaController::class,'index']);
+Route::get('listarArea',[AreaController::class,'index']);
+Route::post('crearArea',[AreaController::class,'create']);
         
 
 
