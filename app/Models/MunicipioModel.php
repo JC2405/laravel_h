@@ -4,7 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class MunicipiosModels extends Model
+class MunicipioModel extends Model
 {
-    //
+    protected $table = 'municipio';
+    protected $primaryKey = 'idMunicipio';
+    public $timestamps =false;
+    protected $fillable = ['nombreMunicipio'];
+    public const PAGINATION = 10;
 }
