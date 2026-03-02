@@ -5,10 +5,13 @@ use App\Http\Controllers\AreaController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DiaController;
+use App\Http\Controllers\FuncionarioController;
 use App\Http\Controllers\MunicipioController;
 use App\Http\Controllers\MunicipiosController;
+use App\Http\Controllers\ProgramaController;
 use App\Http\Controllers\SedeController;
 use App\Http\Controllers\TipoContratoController;
+use App\Http\Controllers\TipoFormacionController;
 use App\Models\MunicipioModel;
 use Hamcrest\Core\Set;
 
@@ -45,3 +48,25 @@ Route::get('listarSedes',[SedeController::class,'index']);
 Route::post('crearSede',[SedeController::class,'store']);
 Route::put('editarSede/{idSede}',[SedeController::class,'update']);
 Route::delete('eliminarSede/{idSede}',[SedeController::class,'destroy']);
+
+
+
+
+Route::get('listarTipoFormacion',[TipoFormacionController::class,'index']);
+Route::post('crearTipoFormacion',[TipoFormacionController::class,'store']);
+Route::put('editarTipoFormacion/{idTipoFormacion}',[TipoFormacionController::class,'update']);
+Route::delete('eliminarTipoFormacion/{idTipoFormacion}',[TipoFormacionController::class,'destroy']);
+
+
+
+Route::get('listarPrograma',[ProgramaController::class,'index']);
+Route::post('crearPrograma',[ProgramaController::class,'store']);
+Route::put('editarPrograma/{idTipoPrograma}',[ProgramaController::class,'update']);
+Route::delete('eliminarPrograma/{idPrograma}',[ProgramaController::class,'destroy']);
+
+
+Route::get('listarFuncionario',[FuncionarioController::class,'index']);
+Route::post('crearFuncionario',[FuncionarioController::class,'store']);
+Route::put('editarFuncionario/{idFuncionario}',[FuncionarioController::class,'update']);
+Route::get('listarFuncionatioXDocumento/{documento}',[FuncionarioController::class,'show']);
+Route::delete('eliminarFuncionario/{idFuncionario}',[FuncionarioController::class,'destroy']);

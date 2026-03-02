@@ -13,7 +13,7 @@ return new class extends Migration
             $table->string('nombre', 160);
             $table->string('codigo', 40)->unique('uq_programa_codigo');
             $table->integer('version')->nullable();
-            $table->enum('estado', ['ACTIVO', 'INACTIVO'])->default('ACTIVO');
+            $table->string('estado', 160);
             $table->unsignedBigInteger('idTipoFormacion');
 
             $table->foreign('idTipoFormacion', 'fk_programa_tipoFormacion')
