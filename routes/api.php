@@ -3,6 +3,7 @@
 use App\Http\Controllers\AmbienteController;
 use App\Http\Controllers\AprendizController;
 use App\Http\Controllers\AreaController;
+use App\Http\Controllers\AuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DiaController;
@@ -15,6 +16,7 @@ use App\Http\Controllers\SedeController;
 use App\Http\Controllers\TipoContratoController;
 use App\Http\Controllers\TipoFormacionController;
 
+Route::post('login', [AuthController::class, 'login']);
 
 Route::get('listarArea', [AreaController::class, 'index']);
 Route::post('crearArea', [AreaController::class, 'store']);

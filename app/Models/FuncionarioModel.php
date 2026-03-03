@@ -2,43 +2,103 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 
-class FuncionarioModel extends Model
+class FuncionarioModel extends Authenticatable implements JWTSubject
 {
-    protected $table = 'funcionario';
+    protected $table      = 'funcionario';
     protected $primaryKey = 'idFuncionario';
-    public $timestamps = false;
-    protected $fillable = [  'nombre','documento','correo','telefono','password','estado','idTipoContrato'];
+    public    $timestamps = false;
+
+    protected $fillable = [
+        'nombre',
+        'documento',
+        'correo',
+        'telefono',
+        'password',
+        'estado',
+        'idTipoContrato',
+    ];
+
+    protected $hidden = [
+        'password'
+    ];
+
+    // 🔐 Hasheo automático de contraseña
+    protected function casts(): array
+    {
+        return [
+            'password' => 'hashed',
+        ];
+    }
+
     public const PAGINATION = 10;
 
+    // ── JWT obligatorios ──────────────────────────────────────
     public function getJWTIdentifier()
     {
-        return $this->getKey(); // retorna idFuncionario
+        return $this->getKey();
     }
 
     public function getJWTCustomClaims(): array
     {
-        // Incluimos el rol directamente en el payload del token
         $rol = $this->roles()->first();
+
         return [
-            'guard' => 'funcionario',
-            'rol'   => $rol ? strtolower($rol->nombreRol) : null,
-            'nombre'=> $this->nombre,
+            'guard'  => 'funcionario',
+            'rol'    => $rol ? strtolower($rol->nombreRol) : null,
+            'nombre' => $this->nombre,
         ];
     }
 
-    public function tipoContrato() {
-    return $this->belongsTo(TipoContratoModel::class, 'idTipoContrato', 'idTipoContrato');
+    // ── Authenticatable helpers ───────────────────────────────
+    public function getAuthIdentifierName(): string
+    {
+        return 'idFuncionario';
     }
-    public function bloques() {
-        return $this->hasMany(BloqueHorarioModel::class, 'idFuncionario', 'idFuncionario');
+
+    public function getAuthPassword(): string
+    {
+        return $this->password;
     }
-    public function areas() {
-        return $this->belongsToMany(AreaModel::class, 'funcionario_area', 'idFuncionario', 'idArea');
+
+    // ── Relaciones ────────────────────────────────────────────
+    public function tipoContrato()
+    {
+        return $this->belongsTo(
+            TipoContratoModel::class,
+            'idTipoContrato',
+            'idTipoContrato'
+        );
     }
-    public function roles() {
-        return $this->belongsToMany(RolesModels::class, 'funcionario_rol', 'idFuncionario', 'idRol');
+
+    public function bloques()
+    {
+        return $this->hasMany(
+            BloqueHorarioModel::class,
+            'idFuncionario',
+            'idFuncionario'
+        );
     }
-}
+
+    public function areas()
+    {
+        return $this->belongsToMany(
+            AreaModel::class,
+            'funcionario_area',
+            'idFuncionario',
+            'idArea'
+        );
+    }
+
+    public function roles()
+    {
+        return $this->belongsToMany(
+            \App\Models\RolModel::class,
+            'funcionario_rol',
+            'idFuncionario',
+            'idRol'
+        )->withPivot('fechaRegistro');
+    }
+}   

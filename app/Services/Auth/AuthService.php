@@ -9,16 +9,25 @@ use Tymon\JWTAuth\Exceptions\JWTException;
 
 class AuthService
 {
-    /**
-     * Login de funcionario. Retorna token + datos + sidebar.
-     */
     public function loginFuncionario(array $credentials): array
     {
         $funcionario = FuncionarioModel::with('roles')
             ->where('correo', $credentials['correo'])
             ->first();
 
-        if (!$funcionario || !Hash::check($credentials['password'], $funcionario->password)) {
+        // ✅ Verificar que el hash sea válido antes de comparar
+        if (!$funcionario) {
+            return ['ok' => false, 'mensaje' => 'Credenciales incorrectas.'];
+        }
+
+        try {
+            $passwordValido = Hash::check($credentials['password'], $funcionario->password);
+        } catch (\RuntimeException $e) {
+            // El password en BD no está hasheado — error de datos, no de código
+            return ['ok' => false, 'mensaje' => 'El password no tiene el formato correcto. Contacta al administrador.'];
+        }
+
+        if (!$passwordValido) {
             return ['ok' => false, 'mensaje' => 'Credenciales incorrectas.'];
         }
 
@@ -27,20 +36,20 @@ class AuthService
         }
 
         try {
-            // Generamos el token usando el guard 'funcionario'
-            $token = auth('funcionario')->login($funcionario);
+            // ✅ JWTAuth::fromUser() genera el token directamente desde el modelo
+            $token = JWTAuth::fromUser($funcionario);
         } catch (JWTException $e) {
             return ['ok' => false, 'mensaje' => 'No se pudo generar el token.'];
         }
 
-        $rol = $funcionario->roles->first();
+        $rol       = $funcionario->roles->first();
         $nombreRol = $rol ? strtolower($rol->nombreRol) : null;
 
         return [
             'ok'      => true,
             'token'   => $token,
             'tipo'    => 'Bearer',
-            'expira'  => auth('funcionario')->factory()->getTTL() * 60, // segundos
+            'expira'  => config('jwt.ttl') * 60, // ✅ lee directo del config/jwt.php
             'usuario' => [
                 'id'     => $funcionario->idFuncionario,
                 'nombre' => $funcionario->nombre,
@@ -51,50 +60,42 @@ class AuthService
         ];
     }
 
-    /**
-     * Refresca el token actual.
-     */
     public function refresh(): array
     {
         try {
-            $nuevoToken = auth('funcionario')->refresh();
+            // ✅ JWTAuth::refresh() renueva el token del request actual
+            $nuevoToken = JWTAuth::refresh(JWTAuth::getToken());
             return ['ok' => true, 'token' => $nuevoToken, 'tipo' => 'Bearer'];
         } catch (JWTException $e) {
             return ['ok' => false, 'mensaje' => 'Token inválido o expirado.'];
         }
     }
 
-    /**
-     * Logout: invalida el token en la blacklist.
-     */
     public function logout(): void
     {
-        auth('funcionario')->logout();
+        // ✅ JWTAuth::invalidate() añade el token a la blacklist
+        JWTAuth::invalidate(JWTAuth::getToken());
     }
 
-    /**
-     * Devuelve los items del sidebar según el rol.
-     * Coordinador ve TODO. Instructor solo su módulo operativo.
-     */
     public function getSidebarPorRol(?string $rol): array
     {
         $menus = [
             'coordinador' => [
-                ['label' => 'Dashboard',      'icon' => 'dashboard',   'ruta' => '/dashboard'],
-                ['label' => 'Funcionarios',   'icon' => 'users',       'ruta' => '/funcionarios'],
-                ['label' => 'Aprendices',     'icon' => 'student',     'ruta' => '/aprendices'],
-                ['label' => 'Fichas',         'icon' => 'folder',      'ruta' => '/fichas'],
-                ['label' => 'Programas',      'icon' => 'book',        'ruta' => '/programas'],
-                ['label' => 'Ambientes',      'icon' => 'building',    'ruta' => '/ambientes'],
-                ['label' => 'Horarios',       'icon' => 'calendar',    'ruta' => '/horarios'],
-                ['label' => 'Sedes',          'icon' => 'location',    'ruta' => '/sedes'],
-                ['label' => 'Configuración',  'icon' => 'settings',    'ruta' => '/configuracion'],
+                ['label' => 'Dashboard',     'icon' => 'dashboard',  'ruta' => '/dashboard'],
+                ['label' => 'Funcionarios',  'icon' => 'users',      'ruta' => '/funcionarios'],
+                ['label' => 'Aprendices',    'icon' => 'student',    'ruta' => '/aprendices'],
+                ['label' => 'Fichas',        'icon' => 'folder',     'ruta' => '/fichas'],
+                ['label' => 'Programas',     'icon' => 'book',       'ruta' => '/programas'],
+                ['label' => 'Ambientes',     'icon' => 'building',   'ruta' => '/ambientes'],
+                ['label' => 'Horarios',      'icon' => 'calendar',   'ruta' => '/horarios'],
+                ['label' => 'Sedes',         'icon' => 'location',   'ruta' => '/sedes'],
+                ['label' => 'Configuración', 'icon' => 'settings',   'ruta' => '/configuracion'],
             ],
             'instructor' => [
-                ['label' => 'Dashboard',      'icon' => 'dashboard',   'ruta' => '/dashboard'],
-                ['label' => 'Mis Horarios',   'icon' => 'calendar',    'ruta' => '/mis-horarios'],
-                ['label' => 'Mis Fichas',     'icon' => 'folder',      'ruta' => '/mis-fichas'],
-                ['label' => 'Aprendices',     'icon' => 'student',     'ruta' => '/aprendices'],
+                ['label' => 'Dashboard',   'icon' => 'dashboard', 'ruta' => '/dashboard'],
+                ['label' => 'Mis Horarios','icon' => 'calendar',  'ruta' => '/mis-horarios'],
+                ['label' => 'Mis Fichas',  'icon' => 'folder',    'ruta' => '/mis-fichas'],
+                ['label' => 'Aprendices',  'icon' => 'student',   'ruta' => '/aprendices'],
             ],
         ];
 
