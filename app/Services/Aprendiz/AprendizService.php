@@ -30,7 +30,6 @@ class AprendizService
 
     public function show($documento)
     {
-        $aprendiz = AprendizModel::where('documento',$documento)->firstOrFail();
-        return response()->json($aprendiz);
+        return AprendizModel::where('documento',$documento)->firstOrFail();
     }
 }

@@ -11,4 +11,8 @@ class AprendizModel extends Model
     public $timestamps = false;
     protected $fillable = ['nombre','documento','correo','telefono','password','estado','idFicha'];
     public const PAGINATION = 10;
+
+    public function ficha() {
+    return $this->belongsTo(FichaModel::class, 'idFicha', 'idFicha');
+    }
 }

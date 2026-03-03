@@ -13,4 +13,11 @@ class SedeModel extends Model
     public $timestamps =false;
     protected $fillable = ['nombre','direccion','descripcion','estado','idMunicipio'];
     public const PAGINATION = 10;
+
+    public function municipio() {
+    return $this->belongsTo(MunicipioModel::class, 'idMunicipio', 'idMunicipio');
+    }
+    public function ambientes() {
+        return $this->hasMany(AmbienteModel::class, 'idSede', 'idSede');
+    }
 }

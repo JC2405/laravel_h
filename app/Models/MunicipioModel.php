@@ -11,4 +11,8 @@ class MunicipioModel extends Model
     public $timestamps =false;
     protected $fillable = ['nombreMunicipio'];
     public const PAGINATION = 10;
+
+     public function sedes() {
+        return $this->hasMany(SedeModel::class, 'idMunicipio', 'idMunicipio');
+    }
 }

@@ -40,7 +40,7 @@ class TipoFormacionController extends Controller
      */
     public function show( $idTipoFormcion)
     {
-        $mostrarTipoFormacion = TipoFormacionModel::finOrFail($idTipoFormcion);
+        $mostrarTipoFormacion = TipoFormacionModel::findOrFail($idTipoFormcion);
         return response()->json($mostrarTipoFormacion);
     }
 

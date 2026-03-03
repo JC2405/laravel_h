@@ -62,7 +62,7 @@ Route::delete('eliminarTipoFormacion/{idTipoFormacion}',[TipoFormacionController
 
 Route::get('listarPrograma',[ProgramaController::class,'index']);
 Route::post('crearPrograma',[ProgramaController::class,'store']);
-Route::put('editarPrograma/{idTipoPrograma}',[ProgramaController::class,'update']);
+Route::put('editarPrograma/{idPrograma}',[ProgramaController::class,'update']);
 Route::delete('eliminarPrograma/{idPrograma}',[ProgramaController::class,'destroy']);
 
 

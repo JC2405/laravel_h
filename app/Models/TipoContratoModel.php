@@ -12,4 +12,7 @@ class TipoContratoModel extends Model
     protected $fillable = ['nombre'];
     public const PAGINATION = 10; 
 
+    public function funcionarios() {
+        return $this->hasMany(FuncionarioModel::class, 'idTipoContrato', 'idTipoContrato');
+    }
 }

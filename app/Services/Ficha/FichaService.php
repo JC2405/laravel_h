@@ -34,7 +34,6 @@ class FichaService
 
     public function show($codigoFicha)
     {
-        $ficha = FichaModel::where('codigoFicha',$codigoFicha)->firstOrFail();
-        return response()->json($ficha);
+        return FichaModel::where('codigoFicha', $codigoFicha)->firstOrFail();
     }
 }
