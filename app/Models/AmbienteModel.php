@@ -11,4 +11,10 @@ class AmbienteModel extends Model
     public $timestamps =false;
     protected $fillable = ['codigo','capacidad','numero','descripcion','bloque','estado','tipoAmbiente','idSede','idArea'];
     public const PAGINATION=10;
+
+    
+        public function sede()
+        {
+            return $this->belongsTo(SedeModel::class, 'idSede', 'idSede');
+        }
 }

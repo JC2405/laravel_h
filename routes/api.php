@@ -1,12 +1,14 @@
 <?php
 
 use App\Http\Controllers\AmbienteController;
+use App\Http\Controllers\AprendizController;
 use App\Http\Controllers\AreaController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DiaController;
 use App\Http\Controllers\FichaController;
 use App\Http\Controllers\FuncionarioController;
+use App\Http\Controllers\HorarioController;
 use App\Http\Controllers\MunicipioController;
 use App\Http\Controllers\ProgramaController;
 use App\Http\Controllers\SedeController;
@@ -82,3 +84,26 @@ Route::post('crearFicha',[FichaController::class,'store']);
 Route::put('editarFicha/{idFicha}',[FichaController::class,'update']);
 Route::delete('eliminarFicha/{idFicha}',[FichaController::class,'destroy']);
 Route::get('mostratFichaXCodigo/{codigoFicha}',[FichaController::class,'show']);
+
+
+Route::get('listarAprendiz',[AprendizController::class,'index']);
+Route::post('crearAprendiz',[AprendizController::class,'store']);
+Route::put('editarAprendiz/{idAprendiz}',[AprendizController::class,'update']);
+Route::delete('eliminarAprendiz/{idAprendiz}',[AprendizController::class,'destroy']);
+Route::get('mostrarAprendizXdocumento/{documento}',[AprendizController::class,'show']);
+
+
+
+Route::get('listarBloques',[HorarioController::class, 'indexBloques']);
+Route::post('crearBloque',[HorarioController::class, 'storeBloque']);
+Route::post('ajustarBloqueYCrear',[HorarioController::class, 'ajustarBloqueYCrear']);
+Route::delete('eliminarBloque/{idBloque}',[HorarioController::class, 'destroyBloque']);
+
+
+Route::get('listarAsignaciones',[HorarioController::class, 'indexAsignaciones']);
+Route::post('crearAsignacion',[HorarioController::class, 'storeAsignacion']);
+Route::get('horariosPorFicha/{idFicha}',[HorarioController::class, 'horariosPorFicha']);
+Route::delete('eliminarAsignacion/{idAsignacion}',[HorarioController::class, 'destroyAsignacion']);
+
+
+Route::post('verificarDisponibilidad',[HorarioController::class, 'verificarDisponibilidad']);
