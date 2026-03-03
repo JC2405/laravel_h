@@ -5,6 +5,7 @@ use App\Http\Controllers\AreaController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DiaController;
+use App\Http\Controllers\FichaController;
 use App\Http\Controllers\FuncionarioController;
 use App\Http\Controllers\MunicipioController;
 use App\Http\Controllers\ProgramaController;
@@ -74,3 +75,10 @@ Route::get('listarAmbiente',[AmbienteController::class,'index']);
 Route::post('crearAmbiente',[AmbienteController::class,'store']);
 Route::put('editarAmbiente/{idAmbiente}',[AmbienteController::class,'update']);
 Route::delete('eliminarAmbiente/{idAmbiente}',[AmbienteController::class,'destroy']);
+
+
+Route::get('listarFicha',[FichaController::class,'index']);
+Route::post('crearFicha',[FichaController::class,'store']);
+Route::put('editarFicha/{idFicha}',[FichaController::class,'update']);
+Route::delete('eliminarFicha/{idFicha}',[FichaController::class,'destroy']);
+Route::get('mostratFichaXCodigo/{codigoFicha}',[FichaController::class,'show']);
