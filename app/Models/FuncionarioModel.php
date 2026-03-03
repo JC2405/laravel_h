@@ -41,15 +41,15 @@ class FuncionarioModel extends Authenticatable implements JWTSubject
         return $this->getKey();
     }
 
-    public function getJWTCustomClaims(): array
+   public function getJWTCustomClaims(): array
     {
-        $rol = $this->roles()->first();
+    $rol = $this->roles->first();
 
-        return [
-            'guard'  => 'funcionario',
-            'rol'    => $rol ? strtolower($rol->nombreRol) : null,
-            'nombre' => $this->nombre,
-        ];
+    return [
+        'guard'  => 'funcionario',
+        'rol'    => $rol ? strtolower($rol->nombreRol) : null,
+        'nombre' => $this->nombre,
+    ];
     }
 
     // ── Authenticatable helpers ───────────────────────────────
