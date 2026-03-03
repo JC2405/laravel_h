@@ -1,19 +1,17 @@
 <?php
 
-
+use App\Http\Controllers\AmbienteController;
 use App\Http\Controllers\AreaController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DiaController;
 use App\Http\Controllers\FuncionarioController;
 use App\Http\Controllers\MunicipioController;
-use App\Http\Controllers\MunicipiosController;
 use App\Http\Controllers\ProgramaController;
 use App\Http\Controllers\SedeController;
 use App\Http\Controllers\TipoContratoController;
 use App\Http\Controllers\TipoFormacionController;
-use App\Models\MunicipioModel;
-use Hamcrest\Core\Set;
+
 
 Route::get('listarArea', [AreaController::class, 'index']);
 Route::post('crearArea', [AreaController::class, 'store']);
@@ -70,3 +68,9 @@ Route::post('crearFuncionario',[FuncionarioController::class,'store']);
 Route::put('editarFuncionario/{idFuncionario}',[FuncionarioController::class,'update']);
 Route::get('listarFuncionatioXDocumento/{documento}',[FuncionarioController::class,'show']);
 Route::delete('eliminarFuncionario/{idFuncionario}',[FuncionarioController::class,'destroy']);
+
+
+Route::get('listarAmbiente',[AmbienteController::class,'index']);
+Route::post('crearAmbiente',[AmbienteController::class,'store']);
+Route::put('editarAmbiente/{idAmbiente}',[AmbienteController::class,'update']);
+Route::delete('eliminarAmbiente/{idAmbiente}',[AmbienteController::class,'destroy']);

@@ -37,7 +37,7 @@ class FuncionarioController extends Controller
      */
     public function show($documento)
     {
-        $buscarIdFuncionario = FuncionarioModel::where('documento', $documento)->firstOrFail();
+        $buscarIdFuncionario = $this->service->show($documento);
         return response()->json($buscarIdFuncionario);
     }
 

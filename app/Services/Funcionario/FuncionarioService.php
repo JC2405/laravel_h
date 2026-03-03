@@ -17,6 +17,12 @@ class FuncionarioService
         return FuncionarioModel::create($data);
     }
 
+    public function show($documento)
+    {
+    $funcionario = FuncionarioModel::where('documento', $documento)->firstOrFail();
+    return response()->json($funcionario);
+    }
+
     public function update(FuncionarioModel $funcionarioModel,array $data):FuncionarioModel
     {
         $funcionarioModel->update($data);
