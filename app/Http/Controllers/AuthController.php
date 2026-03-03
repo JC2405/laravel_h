@@ -52,7 +52,7 @@ class AuthController extends Controller
         ]);
     }
 
-    /** GET /api/sidebar  [requiere JWT] */
+    //error en el load
     public function sidebar()
     {
         $funcionario = auth('funcionario')->user()->load('roles');
