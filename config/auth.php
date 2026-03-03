@@ -14,8 +14,8 @@ return [
     */
 
     'defaults' => [
-        'guard' => env('AUTH_GUARD', 'web'),
-        'passwords' => env('AUTH_PASSWORD_BROKER', 'users'),
+        'guard' => 'funcionario',
+        'passwords' => 'funcionarios',
     ],
 
     /*
@@ -35,13 +35,24 @@ return [
     |
     */
 
-    'guards' => [
-        'web' => [
-            'driver' => 'session',
-            'provider' => 'users',
-        ],
+'guards' => [
+
+    'web' => [
+        'driver' => 'session',
+        'provider' => 'users',
     ],
 
+    'funcionario' => [
+        'driver'   => 'jwt',
+        'provider' => 'funcionarios',
+    ],
+
+    'aprendiz' => [
+        'driver'   => 'jwt',
+        'provider' => 'aprendices',
+    ],
+
+],
     /*
     |--------------------------------------------------------------------------
     | User Providers
@@ -60,15 +71,14 @@ return [
     */
 
     'providers' => [
-        'users' => [
-            'driver' => 'eloquent',
-            'model' => env('AUTH_MODEL', App\Models\User::class),
+        'funcionarios' => [
+        'driver' => 'eloquent',
+        'model'  => App\Models\FuncionarioModel::class,
         ],
-
-        // 'users' => [
-        //     'driver' => 'database',
-        //     'table' => 'users',
-        // ],
+        'aprendices' => [
+        'driver' => 'eloquent',
+        'model'  => App\Models\AprendizModel::class,
+        ],
     ],
 
     /*
@@ -97,6 +107,12 @@ return [
             'expire' => 60,
             'throttle' => 60,
         ],
+        'funcionarios' => [
+            'provider' => 'funcionarios',
+            'table'    => 'password_reset_tokens',
+            'expire'   => 60,
+            'throttle' => 60,
+        ],
     ],
 
     /*
@@ -110,6 +126,6 @@ return [
     |
     */
 
-    'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
+     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
 ];
