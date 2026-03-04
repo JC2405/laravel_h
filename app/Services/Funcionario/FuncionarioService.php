@@ -9,12 +9,17 @@ class FuncionarioService
 {
     public function getAll():LengthAwarePaginator
     {
-        return FuncionarioModel::orderBy('idFuncionario')->paginate(FuncionarioModel::PAGINATION);
+        return FuncionarioModel::with('tipoContrato')->orderBy('idFuncionario')->paginate(FuncionarioModel::PAGINATION);
     }
 
     public function create(array $data):FuncionarioModel
     {
-        return FuncionarioModel::create($data);
+        $funcionario = FuncionarioModel::create($data);
+
+        // Asignar rol de instructor (idRol = 2) en funcionario_rol
+        $funcionario->roles()->attach(2);
+
+        return $funcionario;
     }
 
     public function show($documento)

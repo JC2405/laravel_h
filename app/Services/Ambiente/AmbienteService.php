@@ -9,7 +9,7 @@ class AmbienteService
 {
     public function getAll():LengthAwarePaginator
     {
-        return AmbienteModel::orderBy('idAmbiente')->paginate(AmbienteModel::PAGINATION);
+        return AmbienteModel::with(['sede', 'area'])->orderBy('idAmbiente')->paginate(AmbienteModel::PAGINATION);
     }
 
 

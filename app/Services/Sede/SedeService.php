@@ -9,7 +9,7 @@ class SedeService
 {
     public function getAll():LengthAwarePaginator
     {
-      return SedeModel::orderBy('idSede')->paginate(SedeModel::PAGINATION);
+      return SedeModel::with('municipio')->orderBy('idSede')->paginate(SedeModel::PAGINATION);
     }
 
 

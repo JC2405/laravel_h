@@ -9,7 +9,7 @@ class FichaService
 {
     public function getAll():LengthAwarePaginator
     {
-        return FichaModel::orderBy('idFicha')->paginate(FichaModel::PAGINATION);
+        return FichaModel::with('programa', 'ambiente')->orderBy('idFicha')->paginate(FichaModel::PAGINATION);
     }
 
 

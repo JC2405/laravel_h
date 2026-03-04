@@ -8,7 +8,7 @@ class ProgramaService
 {
     public function getAll():LengthAwarePaginator
     {
-        return ProgramaModel::orderBy('idPrograma')->paginate(ProgramaModel::PAGINATION);
+        return ProgramaModel::with('tipoFormacion')->orderBy('idPrograma')->paginate(ProgramaModel::PAGINATION);
     }
 
     public function create(array $data):ProgramaModel

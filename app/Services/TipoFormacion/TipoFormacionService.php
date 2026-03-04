@@ -9,7 +9,7 @@ class TipoFormacionService
 {
     public function getAll():LengthAwarePaginator
     {
-       return TipoFormacionModel::orderBy('idTipoFormacion')->paginate(TipoFormacionModel::PAGINATOR);
+       return TipoFormacionModel::orderBy('idTipoFormacion')->paginate(TipoFormacionModel::PAGINATION);
     }
 
 
