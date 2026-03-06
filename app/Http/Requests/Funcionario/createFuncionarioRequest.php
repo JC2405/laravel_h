@@ -28,7 +28,9 @@ class createFuncionarioRequest extends FormRequest
             'telefono'=>'required|string|max:255',
             'password'=>'required|string|max:255',
             'estado'=>'required|string|max:255',
-            'idTipoContrato'=>'required|integer'
+            'idTipoContrato'=>'required|integer',
+            'areas'=>'nullable|array',
+            'areas.*'=>'integer|exists:area,idArea'
         ];
     }
 }

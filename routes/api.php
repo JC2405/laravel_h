@@ -96,16 +96,9 @@ Route::get('mostrarAprendizXdocumento/{documento}',[AprendizController::class,'s
 
 
 
-Route::get('listarBloques',[HorarioController::class, 'indexBloques']);
 Route::post('crearBloque',[HorarioController::class, 'storeBloque']);
-Route::post('ajustarBloqueYCrear',[HorarioController::class, 'ajustarBloqueYCrear']);
-Route::delete('eliminarBloque/{idBloque}',[HorarioController::class, 'destroyBloque']);
 
 
-Route::get('listarAsignaciones',[HorarioController::class, 'indexAsignaciones']);
 Route::post('crearAsignacion',[HorarioController::class, 'storeAsignacion']);
 Route::get('horariosPorFicha/{idFicha}',[HorarioController::class, 'horariosPorFicha']);
 Route::delete('eliminarAsignacion/{idAsignacion}',[HorarioController::class, 'destroyAsignacion']);
-
-
-Route::post('verificarDisponibilidad',[HorarioController::class, 'verificarDisponibilidad']);

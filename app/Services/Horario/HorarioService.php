@@ -37,7 +37,6 @@ class HorarioService
                                 ' ya tiene clase de ' . substr($confI->hora_inicio, 0, 5) .
                                 ' a ' . substr($confI->hora_fin, 0, 5) . ' los días seleccionados.',
                 'conflicto'  => $confI,
-                'sugerencia' => $this->sugerirAjuste($confI, $datos['hora_inicio'], $datos['hora_fin']),
             ];
         }
 
@@ -46,7 +45,8 @@ class HorarioService
                 $datos['idAmbiente'],
                 $datos['hora_inicio'],
                 $datos['hora_fin'],
-                $datos['dias']
+                $datos['dias'],
+                excludeFicha: $datos['idFicha'] ?? null   // ← Ignorar bloques ya asignados a la misma ficha
             );
             if ($confA) {
                 return [
@@ -56,7 +56,6 @@ class HorarioService
                                     substr($confA->hora_inicio, 0, 5) . ' a ' .
                                     substr($confA->hora_fin, 0, 5) . ' los días seleccionados.',
                     'conflicto'  => $confA,
-                    'sugerencia' => $this->sugerirAjuste($confA, $datos['hora_inicio'], $datos['hora_fin']),
                 ];
             }
         }
@@ -68,6 +67,7 @@ class HorarioService
                 'modalidad'     => $modalidad,
                 'idAmbiente'    => $modalidad === 'presencial' ? ($datos['idAmbiente'] ?? null) : null,
                 'idFuncionario' => $datos['idFuncionario'],
+                'tipoDeFormacion' => $datos['tipoDeFormacion'] ?? null,
             ]);
 
             $bloque->dias()->attach($datos['dias']);
@@ -81,48 +81,8 @@ class HorarioService
 
 
     // ══════════════════════════════════════════════════════════
-    //  AJUSTAR BLOQUE EXISTENTE + CREAR NUEVO
-    //  Ej: Osman 06:00-12:00 → recortar a 06:00-10:00
-    //      y crear Inglés 10:00-12:00 en el mismo salón
+    //  AJUSTAR BLOQUE EXISTENTE + CREAR NUEVO  →  NO SE USA EN EL FRONT, ELIMINADO
     // ══════════════════════════════════════════════════════════
-    public function ajustarBloqueYCrearNuevo(array $datos): array
-    {
-        $bloqueConflicto = BloqueHorarioModel::find($datos['idBloqueConflicto']);
-        if (!$bloqueConflicto)
-            return ['ok' => false, 'mensaje' => 'El bloque en conflicto no existe.'];
-
-        $nuevaHoraFin = $datos['nueva_hora_fin_conflicto'];
-        $nuevoInicio  = $datos['nuevo_bloque']['hora_inicio'];
-
-        if ($nuevaHoraFin >= $bloqueConflicto->hora_fin)
-            return ['ok' => false,
-                    'mensaje' => 'La nueva hora fin debe ser menor a ' .
-                                  substr($bloqueConflicto->hora_fin, 0, 5) . '.'];
-
-        if ($nuevaHoraFin <= $bloqueConflicto->hora_inicio)
-            return ['ok' => false,
-                    'mensaje' => 'La nueva hora fin no puede ser igual o menor a la hora de inicio del bloque.'];
-
-        if ($nuevaHoraFin > $nuevoInicio)
-            return ['ok' => false,
-                    'mensaje' => 'El ajuste sigue generando solapamiento. ' .
-                                  'La hora fin ajustada debe ser ≤ ' . substr($nuevoInicio, 0, 5) . '.'];
-
-        return DB::transaction(function () use ($datos, $bloqueConflicto) {
-            $bloqueConflicto->update(['hora_fin' => $datos['nueva_hora_fin_conflicto']]);
-
-            $resultado = $this->crearBloque($datos['nuevo_bloque']);
-
-            if (!$resultado['ok'])
-                throw new \Exception($resultado['mensaje']);
-
-            return [
-                'ok'             => true,
-                'bloqueAjustado' => $bloqueConflicto->fresh()->load(['funcionario', 'ambiente', 'dias']),
-                'bloqueNuevo'    => $resultado['bloque'],
-            ];
-        });
-    }
 
 
     // ══════════════════════════════════════════════════════════
@@ -152,7 +112,8 @@ class HorarioService
         $confI = $this->detectarConflictoInstructorAsignacion(
             $bloque->idFuncionario, $bloque->hora_inicio, $bloque->hora_fin,
             $idsDias, $datos['fecha_inicio'], $datos['fecha_fin'],
-            excludeBloque: $bloque->idBloque
+            excludeBloque: $bloque->idBloque,
+            excludeFicha:  $datos['idFicha']   // ← Ignorar conflictos del mismo instructor en la misma ficha
         );
         if ($confI) {
             return [
@@ -161,9 +122,8 @@ class HorarioService
                 'mensaje'    => 'El instructor ' . $confI->instructor_nombre .
                                 ' ya tiene asignación de ' . substr($confI->hora_inicio, 0, 5) .
                                 ' a ' . substr($confI->hora_fin, 0, 5) .
-                                ' (Ficha ' . $confI->codigoFicha . ').',
+                                ' (Ficha ' . $confI->codigoFicha . ') — no puede tener dos fichas distintas en el mismo horario.',
                 'conflicto'  => $confI,
-                'sugerencia' => $this->sugerirAjuste($confI, $bloque->hora_inicio, $bloque->hora_fin),
             ];
         }
 
@@ -171,7 +131,8 @@ class HorarioService
             $confA = $this->detectarConflictoAmbienteAsignacion(
                 $bloque->idAmbiente, $bloque->hora_inicio, $bloque->hora_fin,
                 $idsDias, $datos['fecha_inicio'], $datos['fecha_fin'],
-                excludeBloque: $bloque->idBloque
+                excludeBloque: $bloque->idBloque,
+                excludeFicha:  $datos['idFicha']   // ← Ignorar conflictos de la misma ficha
             );
             if ($confA) {
                 return [
@@ -180,9 +141,8 @@ class HorarioService
                     'mensaje'    => 'El ambiente ya está ocupado de ' .
                                     substr($confA->hora_inicio, 0, 5) . ' a ' .
                                     substr($confA->hora_fin, 0, 5) .
-                                    ' (Ficha ' . ($confA->codigoFicha ?? '') . ').',
+                                    ' (Ficha ' . ($confA->codigoFicha ?? '') . ') — no se puede usar el mismo ambiente para otra ficha en ese horario.',
                     'conflicto'  => $confA,
-                    'sugerencia' => $this->sugerirAjuste($confA, $bloque->hora_inicio, $bloque->hora_fin),
                 ];
             }
         }
@@ -219,7 +179,7 @@ class HorarioService
                 'ficha.programa',
             ])
             ->where('idFicha', $idFicha)
-            ->orderBy('idAsignacion')
+            ->orderByDesc('idAsignacion')  // Más recientes primero → aparecen arriba/encima en el calendario
             ->get();
 
         return [
@@ -234,33 +194,65 @@ class HorarioService
     //  GRILLA VISUAL  (igual a la imagen: fila=hora, col=día)
     //  dia.nombre  ← columna real de tu migración 000006
     // ══════════════════════════════════════════════════════════
-    private function construirGrilla($asignaciones): array
-    {
-        $grilla = [];
+   private function construirGrilla($asignaciones): array
+{
+    // Grilla fija de 06:00 a 22:00 en slots de 2 horas
+    $slots = [];
+    $horaInicio = 6;
+    $horaFin    = 24;
+    $intervalo  = 2;
 
-        foreach ($asignaciones as $asig) {
-            $bloque = $asig->bloque;
-            if (!$bloque) continue;
-
-            $franja = substr($bloque->hora_inicio, 0, 5) . ' - ' . substr($bloque->hora_fin, 0, 5);
-
-            foreach ($bloque->dias as $dia) {
-                $grilla[$franja][$dia->nombre] = [     // ✅ dia.nombre
-                    'instructor'   => $bloque->funcionario->nombre ?? '—',
-                    'ambiente'     => $bloque->ambiente
-                                       ? ($bloque->ambiente->codigo . ' - No.' . $bloque->ambiente->numero)
-                                       : 'Virtual',
-                    'modalidad'    => $bloque->modalidad,
-                    'idBloque'     => $bloque->idBloque,
-                    'idAsignacion' => $asig->idAsignacion,
-                ];
-            }
-        }
-
-        ksort($grilla);
-        return $grilla;
+    for ($h = $horaInicio; $h < $horaFin; $h += $intervalo) {
+        $desde  = sprintf('%02d:00', $h);
+        $hasta  = sprintf('%02d:00', $h + $intervalo);
+        $slots[] = "$desde - $hasta";
     }
 
+    // Inicializar grilla vacía
+    $grilla = [];
+    foreach ($slots as $slot) {
+        $grilla[$slot] = [];
+    }
+
+    foreach ($asignaciones as $asig) {
+        $bloque = $asig->bloque;
+        if (!$bloque) continue;
+
+        $bloqueInicio = strtotime($bloque->hora_inicio);
+        $bloqueFin    = strtotime($bloque->hora_fin);
+
+        foreach ($slots as $slot) {
+            [$desde, $hasta] = explode(' - ', $slot);
+            $slotInicio = strtotime($desde);
+            $slotFin    = strtotime($hasta);
+
+            // El slot está cubierto si el bloque lo solapa (aunque sea parcialmente)
+            $solapa = $bloqueInicio < $slotFin && $bloqueFin > $slotInicio;
+
+            if (!$solapa) continue;
+
+            foreach ($bloque->dias as $dia) {
+                // Solo sobreescribir si la celda está vacía
+                if (!isset($grilla[$slot][$dia->nombre])) {
+                    $grilla[$slot][$dia->nombre] = [
+                        'instructor'   => $bloque->funcionario->nombre ?? '—',
+                        'ambiente'     => $bloque->ambiente
+                                           ? ($bloque->ambiente->codigo . ' - No.' . $bloque->ambiente->numero)
+                                           : 'Virtual',
+                        'modalidad'    => $bloque->modalidad,
+                        'idBloque'     => $bloque->idBloque,
+                        'idAsignacion' => $asig->idAsignacion,
+                    ];
+                }
+            }
+        }
+    }
+
+    // Eliminar filas completamente vacías (Comentado para mostrar todas las franjas de 6am a 12am)
+    // $grilla = array_filter($grilla, fn($dias) => !empty($dias));
+
+    return $grilla;
+}
 
     // ══════════════════════════════════════════════════════════
     //  ELIMINAR BLOQUE
@@ -279,72 +271,34 @@ class HorarioService
         return ['ok' => true, 'mensaje' => 'Bloque eliminado correctamente.'];
     }
 
-
     // ══════════════════════════════════════════════════════════
-    //  VERIFICAR DISPONIBILIDAD INSTRUCTOR
+    //  ELIMINAR ASIGNACIÓN Y SU BLOQUE ASOCIADO
     // ══════════════════════════════════════════════════════════
-    public function verificarDisponibilidadInstructor(
-        int $idFuncionario, string $horaInicio, string $horaFin,
-        array $dias, string $fechaInicio, string $fechaFin
-    ): array {
-        $conflicto = $this->detectarConflictoInstructorAsignacion(
-            $idFuncionario, $horaInicio, $horaFin, $dias, $fechaInicio, $fechaFin
-        );
-
-        if (!$conflicto)
-            return ['disponible' => true];
-
-        return [
-            'disponible' => false,
-            'conflicto'  => $conflicto,
-            'sugerencia' => $this->sugerirAjuste($conflicto, $horaInicio, $horaFin),
-        ];
-    }
-
-
-    // ══════════════════════════════════════════════════════════
-    //  SUGERIR AJUSTE
-    // ══════════════════════════════════════════════════════════
-    private function sugerirAjuste(object $conflicto, string $nuevoInicio, string $nuevoFin): array
+    public function eliminarAsignacionYBloque(int $idAsignacion): array
     {
-        $hIni = $conflicto->hora_inicio;
-        $hFin = $conflicto->hora_fin;
-
-        if ($nuevoInicio > $hIni && $nuevoInicio < $hFin) {
-            return [
-                'tipo'                 => 'RECORTAR_FIN',
-                'idBloqueAfectado'     => $conflicto->idBloque,
-                'instructor_afectado'  => $conflicto->instructor_nombre ?? null,
-                'hora_inicio_original' => $hIni,
-                'hora_fin_original'    => $hFin,
-                'hora_fin_sugerida'    => $nuevoInicio,
-                'descripcion'          =>
-                    'Se sugiere recortar el bloque de ' . ($conflicto->instructor_nombre ?? 'el instructor') .
-                    ' de ' . substr($hIni, 0, 5) . '–' . substr($hFin, 0, 5) .
-                    ' a ' . substr($hIni, 0, 5) . '–' . substr($nuevoInicio, 0, 5) .
-                    ' para liberar el espacio de ' . substr($nuevoInicio, 0, 5) .
-                    ' a ' . substr($nuevoFin, 0, 5) . '.',
-            ];
+        $asignacion = AsignacionModel::find($idAsignacion);
+        if (!$asignacion) {
+            return ['ok' => false, 'mensaje' => 'Asignación no encontrada.'];
         }
 
-        if ($nuevoFin > $hIni && $nuevoFin < $hFin) {
-            return [
-                'tipo'                 => 'RECORTAR_INICIO',
-                'idBloqueAfectado'     => $conflicto->idBloque,
-                'instructor_afectado'  => $conflicto->instructor_nombre ?? null,
-                'hora_inicio_original' => $hIni,
-                'hora_fin_original'    => $hFin,
-                'hora_inicio_sugerida' => $nuevoFin,
-                'descripcion'          =>
-                    'Se sugiere mover el inicio del bloque de ' . ($conflicto->instructor_nombre ?? 'el instructor') .
-                    ' de ' . substr($hIni, 0, 5) . ' a ' . substr($nuevoFin, 0, 5) . '.',
-            ];
-        }
+        $idBloque = $asignacion->idBloque;
 
-        return [
-            'tipo'        => 'SIN_AJUSTE_POSIBLE',
-            'descripcion' => 'El nuevo bloque cubre completamente el bloque en conflicto. Elimínelo o cambie el horario.',
-        ];
+        DB::transaction(function () use ($asignacion, $idBloque) {
+            // Eliminar la asignación primero (por la llave foránea)
+            $asignacion->delete();
+
+            // Si el bloque ya no tiene otras asignaciones, también lo borramos
+            $otrasAsignaciones = AsignacionModel::where('idBloque', $idBloque)->count();
+            if ($otrasAsignaciones === 0) {
+                $bloque = BloqueHorarioModel::find($idBloque);
+                if ($bloque) {
+                    $bloque->dias()->detach(); // Pivot table
+                    $bloque->delete();         // Bloque actual
+                }
+            }
+        });
+
+        return ['ok' => true, 'mensaje' => 'Asignación y horario eliminados completamente.'];
     }
 
 
@@ -368,24 +322,36 @@ class HorarioService
     }
 
     private function detectarConflictoAmbiente(
-        int $idAmbiente, string $hi, string $hf, array $dias, int $excluir = null
+        int $idAmbiente, string $hi, string $hf, array $dias, int $excluir = null, ?int $excludeFicha = null
     ) {
-        return DB::table('bloque_horario as bh')
+        $query = DB::table('bloque_horario as bh')
             ->join('bloque_dia as bd',  'bh.idBloque',     '=', 'bd.idBloque')
             ->join('funcionario as f',  'bh.idFuncionario','=', 'f.idFuncionario')
             ->where('bh.idAmbiente', $idAmbiente)
             ->whereIn('bd.idDia', $dias)
             ->where('bh.hora_inicio', '<', $hf)
             ->where('bh.hora_fin',    '>', $hi)
-            ->when($excluir, fn($q) => $q->where('bh.idBloque', '!=', $excluir))
-            ->select('bh.idBloque', 'bh.hora_inicio', 'bh.hora_fin',
+            ->when($excluir, fn($q) => $q->where('bh.idBloque', '!=', $excluir));
+
+        // Si se pasa idFicha, excluir bloques que ya estén asignados a esa ficha
+        if ($excludeFicha) {
+            $bloquesDeLaFicha = DB::table('asignacion')
+                ->where('idFicha', $excludeFicha)
+                ->pluck('idBloque')
+                ->toArray();
+            if (!empty($bloquesDeLaFicha)) {
+                $query->whereNotIn('bh.idBloque', $bloquesDeLaFicha);
+            }
+        }
+
+        return $query->select('bh.idBloque', 'bh.hora_inicio', 'bh.hora_fin',
                      DB::raw('f.nombre as instructor_nombre'))
             ->first();
     }
 
     private function detectarConflictoInstructorAsignacion(
         int $idFuncionario, string $hi, string $hf, array $dias,
-        string $fi, string $ff, int $excludeBloque = null
+        string $fi, string $ff, int $excludeBloque = null, int $excludeFicha = null
     ) {
         return DB::table('asignacion as a')
             ->join('bloque_horario as bh', 'a.idBloque',       '=', 'bh.idBloque')
@@ -399,6 +365,7 @@ class HorarioService
             ->where('a.fecha_inicio', '<=', $ff)
             ->where('a.fecha_fin',    '>=', $fi)
             ->when($excludeBloque, fn($q) => $q->where('bh.idBloque', '!=', $excludeBloque))
+            ->when($excludeFicha,  fn($q) => $q->where('a.idFicha',   '!=', $excludeFicha))
             ->select('bh.idBloque', 'bh.hora_inicio', 'bh.hora_fin', 'f.codigoFicha',
                      DB::raw('func.nombre as instructor_nombre'))
             ->first();
@@ -406,7 +373,7 @@ class HorarioService
 
     private function detectarConflictoAmbienteAsignacion(
         int $idAmbiente, string $hi, string $hf, array $dias,
-        string $fi, string $ff, int $excludeBloque = null
+        string $fi, string $ff, int $excludeBloque = null, int $excludeFicha = null
     ) {
         return DB::table('asignacion as a')
             ->join('bloque_horario as bh', 'a.idBloque',       '=', 'bh.idBloque')
@@ -420,6 +387,7 @@ class HorarioService
             ->where('a.fecha_inicio', '<=', $ff)
             ->where('a.fecha_fin',    '>=', $fi)
             ->when($excludeBloque, fn($q) => $q->where('bh.idBloque', '!=', $excludeBloque))
+            ->when($excludeFicha,  fn($q) => $q->where('a.idFicha',   '!=', $excludeFicha))
             ->select('bh.idBloque', 'bh.hora_inicio', 'bh.hora_fin', 'f.codigoFicha',
                      DB::raw('func.nombre as instructor_nombre'))
             ->first();

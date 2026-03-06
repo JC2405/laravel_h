@@ -12,6 +12,7 @@ class BloqueHorarioModel extends Model
         'hora_inicio',
         'hora_fin',
         'modalidad',
+        'tipoDeFormacion',
         'idAmbiente',
         'idFuncionario',
     ];

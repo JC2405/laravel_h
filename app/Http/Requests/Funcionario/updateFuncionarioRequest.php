@@ -26,9 +26,11 @@ class updateFuncionarioRequest extends FormRequest
             'documento'=>'required|string|max:255',
             'correo'=>'required|string|max:255',
             'telefono'=>'required|string|max:255',
-            'password'=>'required|string|max:255',
+            'password'=>'nullable|string|max:255',
             'estado'=>'required|string|max:255',
-            'idTipoContrato'=>'required|integer'
+            'idTipoContrato'=>'required|integer',
+            'areas'=>'nullable|array',
+            'areas.*'=>'integer|exists:area,idArea'
         ];
     }
 }

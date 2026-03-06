@@ -13,8 +13,11 @@ return new class extends Migration
             $table->time('hora_inicio');
             $table->time('hora_fin');
             $table->string('modalidad', 30);
+            $table->string('tipoDeFormacion');
             $table->unsignedBigInteger('idAmbiente')->nullable();
+
             $table->unsignedBigInteger('idFuncionario');
+        
 
             $table->foreign('idAmbiente', 'fk_bloque_ambiente')
                   ->references('idAmbiente')->on('ambiente')

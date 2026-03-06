@@ -9,29 +9,41 @@ class FuncionarioService
 {
     public function getAll():LengthAwarePaginator
     {
-        return FuncionarioModel::with('tipoContrato')->orderBy('idFuncionario')->paginate(FuncionarioModel::PAGINATION);
+        return FuncionarioModel::with(['tipoContrato', 'areas'])->orderBy('idFuncionario')->paginate(FuncionarioModel::PAGINATION);
     }
 
     public function create(array $data):FuncionarioModel
     {
         $funcionario = FuncionarioModel::create($data);
 
-        // Asignar rol de instructor (idRol = 2) en funcionario_rol
+        // Default rol = 2 porque estoy ingresando al instructor
         $funcionario->roles()->attach(2);
+        
+        if (isset($data['areas'])) {
+            $funcionario->areas()->sync($data['areas']);
+        }
 
-        return $funcionario;
+        return $funcionario->load('areas');
     }
 
     public function show($documento)
     {
-    $funcionario = FuncionarioModel::where('documento', $documento)->firstOrFail();
-    return response()->json($funcionario);
+        $funcionario = FuncionarioModel::with('areas')->where('documento', $documento)->firstOrFail();
+        return response()->json($funcionario);
     }
 
     public function update(FuncionarioModel $funcionarioModel,array $data):FuncionarioModel
     {
+        if (empty($data['password'])) {
+            unset($data['password']);
+        }
         $funcionarioModel->update($data);
-        return $funcionarioModel->refresh();
+
+        if (isset($data['areas'])) {
+            $funcionarioModel->areas()->sync($data['areas']);
+        }
+        
+        return $funcionarioModel->refresh()->load('areas');
     }
 
     public function delete(FuncionarioModel $funcionarioModel):void
