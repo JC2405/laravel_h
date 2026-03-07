@@ -8,9 +8,9 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class HorarioService
 {
-    // ══════════════════════════════════════════════════════════
+    
     //  CREAR BLOQUE
-    // ══════════════════════════════════════════════════════════
+    
     public function crearBloque(array $datos): array
     {
         if ($datos['hora_inicio'] >= $datos['hora_fin'])
@@ -82,11 +82,11 @@ class HorarioService
     }
 
 
-    // ══════════════════════════════════════════════════════════
+    
     //  AJUSTAR BLOQUE EXISTENTE + CREAR NUEVO
     //  Ej: Osman 06:00-12:00 → recortar a 06:00-10:00
     //      y crear Inglés 10:00-12:00 en el mismo salón
-    // ══════════════════════════════════════════════════════════
+    
     public function ajustarBloqueYCrearNuevo(array $datos): array
     {
         $bloqueConflicto = BloqueHorarioModel::find($datos['idBloqueConflicto']);
@@ -127,9 +127,9 @@ class HorarioService
     }
 
 
-    // ══════════════════════════════════════════════════════════
+    
     //  CREAR ASIGNACIÓN
-    // ══════════════════════════════════════════════════════════
+    
     public function crearAsignacion(array $datos): array
     {
         if ($datos['fecha_inicio'] > $datos['fecha_fin'])
@@ -211,9 +211,42 @@ class HorarioService
     }
 
 
-    // ══════════════════════════════════════════════════════════
+    // ELIMINAR UN DÍA DE UN BLOQUE (sin eliminar el bloque)
+    public function eliminarDiaDeBloque(int $idBloque, int $idDia): array
+{
+    $bloque = BloqueHorarioModel::with('dias')->find($idBloque);
+    if (!$bloque) {
+        return ['ok' => false, 'mensaje' => 'Bloque no encontrado.'];
+    }
+
+    $diaExiste = $bloque->dias->contains('idDia', $idDia);
+    if (!$diaExiste) {
+        return ['ok' => false, 'mensaje' => 'El día no está asignado a este bloque.'];
+    }
+
+    // Validacion por si necesito dejar un dia almenos en el bloque 
+   // if ($bloque->dias->count() === 1) {
+   //     return [
+   //         'ok'     => false,
+   //         'codigo' => 'ULTIMO_DIA',
+   //         'mensaje' => 'No se puede eliminar el único día del bloque. Elimina el bloque completo si deseas.',
+   //     ];
+   // }
+
+    DB::transaction(function () use ($bloque, $idDia) {
+        $bloque->dias()->detach($idDia);
+    });
+
+    return [
+        'ok'      => true,
+        'mensaje' => 'Día eliminado del bloque correctamente.',
+        'bloque'  => $bloque->fresh()->load(['funcionario', 'ambiente', 'dias']),
+    ];
+}
+
+    
     //  LISTAR HORARIOS POR FICHA + GRILLA VISUAL
-    // ══════════════════════════════════════════════════════════
+    
     public function listarPorFicha(int $idFicha): array
     {
         $asignaciones = AsignacionModel::with([
@@ -234,10 +267,10 @@ class HorarioService
     }
 
 
-    // ══════════════════════════════════════════════════════════
+    
     //  GRILLA VISUAL  (igual a la imagen: fila=hora, col=día)
     //  dia.nombre  ← columna real de tu migración 000006
-    // ══════════════════════════════════════════════════════════
+    
    private function construirGrilla($asignaciones): array
 {
     // Grilla fija de 06:00 a 22:00 en slots de 2 horas
@@ -298,9 +331,9 @@ class HorarioService
     return $grilla;
 }
 
-    // ══════════════════════════════════════════════════════════
+    
     //  ELIMINAR BLOQUE
-    // ══════════════════════════════════════════════════════════
+    
     public function eliminarBloque(int $idBloque): array
     {
         $bloque = BloqueHorarioModel::find($idBloque);
@@ -315,9 +348,13 @@ class HorarioService
         return ['ok' => true, 'mensaje' => 'Bloque eliminado correctamente.'];
     }
 
-    // ══════════════════════════════════════════════════════════
+
+   
+
+    
+    
     //  ELIMINAR ASIGNACIÓN Y SU BLOQUE ASOCIADO
-    // ══════════════════════════════════════════════════════════
+    
     public function eliminarAsignacionYBloque(int $idAsignacion): array
     {
         $asignacion = AsignacionModel::find($idAsignacion);
@@ -346,9 +383,9 @@ class HorarioService
     }
 
 
-    // ══════════════════════════════════════════════════════════
+    
     //  VERIFICAR DISPONIBILIDAD INSTRUCTOR
-    // ══════════════════════════════════════════════════════════
+    
     public function verificarDisponibilidadInstructor(
         int $idFuncionario, string $horaInicio, string $horaFin,
         array $dias, string $fechaInicio, string $fechaFin
@@ -368,9 +405,9 @@ class HorarioService
     }
 
 
-    // ══════════════════════════════════════════════════════════
+    
     //  SUGERIR AJUSTE
-    // ══════════════════════════════════════════════════════════
+    
     private function sugerirAjuste(object $conflicto, string $nuevoInicio, string $nuevoFin): array
     {
         $hIni = $conflicto->hora_inicio;
@@ -414,9 +451,9 @@ class HorarioService
     }
 
 
-    // ══════════════════════════════════════════════════════════
+    
     //  PRIVADOS: detección de cruces
-    // ══════════════════════════════════════════════════════════
+    
     private function detectarConflictoInstructor(
         int $idFuncionario, string $hi, string $hf, array $dias, int $excluir = null
     ) {

@@ -62,4 +62,22 @@ class HorarioController extends Controller
         }
         return response()->json(['message' => $resultado['mensaje']]);
     }
+
+    
+    public function destroyDiaDeBloque(int $idBloque, int $idDia)
+    {
+    $resultado = $this->service->eliminarDiaDeBloque($idBloque, $idDia);
+
+    if (!$resultado['ok']) {
+        return response()->json([
+            'message' => $resultado['mensaje'],
+            'codigo'  => $resultado['codigo'] ?? null,
+        ], 422);
+    }
+
+    return response()->json([
+        'message' => $resultado['mensaje'],
+        'bloque'  => $resultado['bloque'],
+    ]);
+    }
 }
