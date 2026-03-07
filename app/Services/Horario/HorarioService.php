@@ -37,6 +37,7 @@ class HorarioService
                                 ' ya tiene clase de ' . substr($confI->hora_inicio, 0, 5) .
                                 ' a ' . substr($confI->hora_fin, 0, 5) . ' los días seleccionados.',
                 'conflicto'  => $confI,
+                'sugerencia' => $this->sugerirAjuste($confI, $datos['hora_inicio'], $datos['hora_fin']),
             ];
         }
 
@@ -46,7 +47,7 @@ class HorarioService
                 $datos['hora_inicio'],
                 $datos['hora_fin'],
                 $datos['dias'],
-                excludeFicha: $datos['idFicha'] ?? null   // ← Ignorar bloques ya asignados a la misma ficha
+                excludeFicha: $datos['idFicha'] ?? null   // ← Ignora bloques ya asignados a la misma ficha
             );
             if ($confA) {
                 return [
@@ -56,6 +57,7 @@ class HorarioService
                                     substr($confA->hora_inicio, 0, 5) . ' a ' .
                                     substr($confA->hora_fin, 0, 5) . ' los días seleccionados.',
                     'conflicto'  => $confA,
+                    'sugerencia' => $this->sugerirAjuste($confA, $datos['hora_inicio'], $datos['hora_fin']),
                 ];
             }
         }
@@ -81,8 +83,48 @@ class HorarioService
 
 
     // ══════════════════════════════════════════════════════════
-    //  AJUSTAR BLOQUE EXISTENTE + CREAR NUEVO  →  NO SE USA EN EL FRONT, ELIMINADO
+    //  AJUSTAR BLOQUE EXISTENTE + CREAR NUEVO
+    //  Ej: Osman 06:00-12:00 → recortar a 06:00-10:00
+    //      y crear Inglés 10:00-12:00 en el mismo salón
     // ══════════════════════════════════════════════════════════
+    public function ajustarBloqueYCrearNuevo(array $datos): array
+    {
+        $bloqueConflicto = BloqueHorarioModel::find($datos['idBloqueConflicto']);
+        if (!$bloqueConflicto)
+            return ['ok' => false, 'mensaje' => 'El bloque en conflicto no existe.'];
+
+        $nuevaHoraFin = $datos['nueva_hora_fin_conflicto'];
+        $nuevoInicio  = $datos['nuevo_bloque']['hora_inicio'];
+
+        if ($nuevaHoraFin >= $bloqueConflicto->hora_fin)
+            return ['ok' => false,
+                    'mensaje' => 'La nueva hora fin debe ser menor a ' .
+                                  substr($bloqueConflicto->hora_fin, 0, 5) . '.'];
+
+        if ($nuevaHoraFin <= $bloqueConflicto->hora_inicio)
+            return ['ok' => false,
+                    'mensaje' => 'La nueva hora fin no puede ser igual o menor a la hora de inicio del bloque.'];
+
+        if ($nuevaHoraFin > $nuevoInicio)
+            return ['ok' => false,
+                    'mensaje' => 'El ajuste sigue generando solapamiento. ' .
+                                  'La hora fin ajustada debe ser ≤ ' . substr($nuevoInicio, 0, 5) . '.'];
+
+        return DB::transaction(function () use ($datos, $bloqueConflicto) {
+            $bloqueConflicto->update(['hora_fin' => $datos['nueva_hora_fin_conflicto']]);
+
+            $resultado = $this->crearBloque($datos['nuevo_bloque']);
+
+            if (!$resultado['ok'])
+                throw new \Exception($resultado['mensaje']);
+
+            return [
+                'ok'             => true,
+                'bloqueAjustado' => $bloqueConflicto->fresh()->load(['funcionario', 'ambiente', 'dias']),
+                'bloqueNuevo'    => $resultado['bloque'],
+            ];
+        });
+    }
 
 
     // ══════════════════════════════════════════════════════════
@@ -124,6 +166,7 @@ class HorarioService
                                 ' a ' . substr($confI->hora_fin, 0, 5) .
                                 ' (Ficha ' . $confI->codigoFicha . ') — no puede tener dos fichas distintas en el mismo horario.',
                 'conflicto'  => $confI,
+                'sugerencia' => $this->sugerirAjuste($confI, $bloque->hora_inicio, $bloque->hora_fin),
             ];
         }
 
@@ -143,6 +186,7 @@ class HorarioService
                                     substr($confA->hora_fin, 0, 5) .
                                     ' (Ficha ' . ($confA->codigoFicha ?? '') . ') — no se puede usar el mismo ambiente para otra ficha en ese horario.',
                     'conflicto'  => $confA,
+                    'sugerencia' => $this->sugerirAjuste($confA, $bloque->hora_inicio, $bloque->hora_fin),
                 ];
             }
         }
@@ -299,6 +343,74 @@ class HorarioService
         });
 
         return ['ok' => true, 'mensaje' => 'Asignación y horario eliminados completamente.'];
+    }
+
+
+    // ══════════════════════════════════════════════════════════
+    //  VERIFICAR DISPONIBILIDAD INSTRUCTOR
+    // ══════════════════════════════════════════════════════════
+    public function verificarDisponibilidadInstructor(
+        int $idFuncionario, string $horaInicio, string $horaFin,
+        array $dias, string $fechaInicio, string $fechaFin
+    ): array {
+        $conflicto = $this->detectarConflictoInstructorAsignacion(
+            $idFuncionario, $horaInicio, $horaFin, $dias, $fechaInicio, $fechaFin
+        );
+
+        if (!$conflicto)
+            return ['disponible' => true];
+
+        return [
+            'disponible' => false,
+            'conflicto'  => $conflicto,
+            'sugerencia' => $this->sugerirAjuste($conflicto, $horaInicio, $horaFin),
+        ];
+    }
+
+
+    // ══════════════════════════════════════════════════════════
+    //  SUGERIR AJUSTE
+    // ══════════════════════════════════════════════════════════
+    private function sugerirAjuste(object $conflicto, string $nuevoInicio, string $nuevoFin): array
+    {
+        $hIni = $conflicto->hora_inicio;
+        $hFin = $conflicto->hora_fin;
+
+        if ($nuevoInicio > $hIni && $nuevoInicio < $hFin) {
+            return [
+                'tipo'                 => 'RECORTAR_FIN',
+                'idBloqueAfectado'     => $conflicto->idBloque,
+                'instructor_afectado'  => $conflicto->instructor_nombre ?? null,
+                'hora_inicio_original' => $hIni,
+                'hora_fin_original'    => $hFin,
+                'hora_fin_sugerida'    => $nuevoInicio,
+                'descripcion'          =>
+                    'Se sugiere recortar el bloque de ' . ($conflicto->instructor_nombre ?? 'el instructor') .
+                    ' de ' . substr($hIni, 0, 5) . '–' . substr($hFin, 0, 5) .
+                    ' a ' . substr($hIni, 0, 5) . '–' . substr($nuevoInicio, 0, 5) .
+                    ' para liberar el espacio de ' . substr($nuevoInicio, 0, 5) .
+                    ' a ' . substr($nuevoFin, 0, 5) . '.',
+            ];
+        }
+
+        if ($nuevoFin > $hIni && $nuevoFin < $hFin) {
+            return [
+                'tipo'                 => 'RECORTAR_INICIO',
+                'idBloqueAfectado'     => $conflicto->idBloque,
+                'instructor_afectado'  => $conflicto->instructor_nombre ?? null,
+                'hora_inicio_original' => $hIni,
+                'hora_fin_original'    => $hFin,
+                'hora_inicio_sugerida' => $nuevoFin,
+                'descripcion'          =>
+                    'Se sugiere mover el inicio del bloque de ' . ($conflicto->instructor_nombre ?? 'el instructor') .
+                    ' de ' . substr($hIni, 0, 5) . ' a ' . substr($nuevoFin, 0, 5) . '.',
+            ];
+        }
+
+        return [
+            'tipo'        => 'SIN_AJUSTE_POSIBLE',
+            'descripcion' => 'El nuevo bloque cubre completamente el bloque en conflicto. Elimínelo o cambie el horario.',
+        ];
     }
 
 
