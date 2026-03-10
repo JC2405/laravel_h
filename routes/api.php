@@ -103,3 +103,6 @@ Route::post('crearAsignacion',[HorarioController::class, 'storeAsignacion']);
 Route::get('horariosPorFicha/{idFicha}',[HorarioController::class, 'horariosPorFicha']);
 Route::delete('eliminarAsignacion/{idAsignacion}',[HorarioController::class, 'destroyAsignacion']);
 Route::delete('eliminarDiaDeBloque/{idBloque}/{idDia}', [HorarioController::class, 'destroyDiaDeBloque']);
+
+
+Route::get('horarioPorInstructor/{idFuncionario}',[HorarioController::class,'listarFuncionarioPorHorario']);        

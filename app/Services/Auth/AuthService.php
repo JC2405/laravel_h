@@ -15,7 +15,7 @@ class AuthService
             ->where('correo', $credentials['correo'])
             ->first();
 
-        // ✅ Verificar que el hash sea válido antes de comparar
+      
         if (!$funcionario) {
             return ['ok' => false, 'mensaje' => 'Credenciales incorrectas.'];
         }
@@ -23,7 +23,7 @@ class AuthService
         try {
             $passwordValido = Hash::check($credentials['password'], $funcionario->password);
         } catch (\RuntimeException $e) {
-            // El password en BD no está hasheado — error de datos, no de código
+            // Por si no entra hasheada las ppassword
             return ['ok' => false, 'mensaje' => 'El password no tiene el formato correcto. Contacta al administrador.'];
         }
 
