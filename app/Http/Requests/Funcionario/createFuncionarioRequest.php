@@ -26,7 +26,7 @@ class createFuncionarioRequest extends FormRequest
             'documento'=>'required|string|max:255',
             'correo'=>'required|string|max:255',
             'telefono'=>'required|string|max:255',
-            'password'=>'required|string|max:255',
+            'password'=>'string|max:255',
             'estado'=>'required|string|max:255',
             'idTipoContrato'=>'required|integer',
             'areas'=>'nullable|array',

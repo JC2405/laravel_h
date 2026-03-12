@@ -10,16 +10,27 @@ class BloqueService
 {
     public function __construct(protected DeteccionConflictoService $conflictos) {}
 
+    /**
+     * Crea un bloque CON validaciones de conflicto de horario (sin fechas).
+     * Usado cuando se crea un bloque de forma independiente, sin asignación.
+     */
     public function crearBloque(array $datos): array
     {
         $modalidad = strtolower(trim($datos['modalidad'] ?? ''));
+
         if ($datos['hora_inicio'] >= $datos['hora_fin'])
             return ['ok' => false, 'codigo' => 'HORA_INVALIDA', 'mensaje' => 'La hora inicio debe ser menor a la hora fin.'];
+
         if ($modalidad === 'presencial' && empty($datos['idAmbiente']))
             return ['ok' => false, 'codigo' => 'AMBIENTE_REQUERIDO', 'mensaje' => 'El ambiente es requerido para la modalidad presencial.'];
 
-         //verifica que el instructor no tenga otro bloque
-        $validacionInstructor = $this->conflictos->detectarConfictoInstructor($datos['idFuncionario'],$datos['hora_inicio'],$datos['hora_fin'],$datos['dias'],excluirBloque: $datos['idBloque'] ?? null ); // excluye el bloque actual 
+        $validacionInstructor = $this->conflictos->detectarConfictoInstructor(
+            $datos['idFuncionario'],
+            $datos['hora_inicio'],
+            $datos['hora_fin'],
+            $datos['dias'],
+            excluirBloque: $datos['idBloque'] ?? null
+        );
 
         if ($validacionInstructor)
             return [
@@ -28,15 +39,18 @@ class BloqueService
                 'mensaje'   => 'El instructor ' . $validacionInstructor->instructor_nombre
                              . ' ya tiene clase de '
                              . substr($validacionInstructor->hora_inicio, 0, 5)
-                             . ' a '
-                             . substr($validacionInstructor->hora_fin, 0, 5)
+                             . ' a ' . substr($validacionInstructor->hora_fin, 0, 5)
                              . ' los días seleccionados.',
                 'conflicto' => $validacionInstructor,
             ];
 
-        // Solo verificar conflicto de ambiente si la modalidad es presencial
         if ($modalidad === 'presencial') {
-            $validacionAmbiente = $this->conflictos->detectarConflictoAmbiente($datos['idAmbiente'],$datos['hora_inicio'],$datos['hora_fin'],$datos['dias'],excluirFicha: $datos['idFicha'] ?? null // permite agregar más clases a la misma ficha en ese ambiente
+            $validacionAmbiente = $this->conflictos->detectarConflictoAmbiente(
+                $datos['idAmbiente'],
+                $datos['hora_inicio'],
+                $datos['hora_fin'],
+                $datos['dias'],
+                excluirFicha: $datos['idFicha'] ?? null
             );
 
             if ($validacionAmbiente)
@@ -45,12 +59,28 @@ class BloqueService
                     'codigo'    => 'CONFLICTO_AMBIENTE',
                     'mensaje'   => 'El ambiente ya está ocupado de '
                                  . substr($validacionAmbiente->hora_inicio, 0, 5)
-                                 . ' a '
-                                 . substr($validacionAmbiente->hora_fin, 0, 5)
+                                 . ' a ' . substr($validacionAmbiente->hora_fin, 0, 5)
                                  . ' los días seleccionados.',
                     'conflicto' => $validacionAmbiente,
                 ];
         }
+
+        return $this->crearBloqueSinValidarConflictos($datos);
+    }
+
+    /**
+     * Crea el bloque directamente SIN validaciones de conflicto de horario.
+     * Usado por AsignacionService, que ya validó todo con fechas correctas.
+     */
+    public function crearBloqueSinValidarConflictos(array $datos): array
+    {
+        $modalidad = strtolower(trim($datos['modalidad'] ?? ''));
+
+        if ($datos['hora_inicio'] >= $datos['hora_fin'])
+            return ['ok' => false, 'codigo' => 'HORA_INVALIDA', 'mensaje' => 'La hora inicio debe ser menor a la hora fin.'];
+
+        if ($modalidad === 'presencial' && empty($datos['idAmbiente']))
+            return ['ok' => false, 'codigo' => 'AMBIENTE_REQUERIDO', 'mensaje' => 'El ambiente es requerido para la modalidad presencial.'];
 
         return DB::transaction(function () use ($datos, $modalidad) {
             $bloque = BloqueHorarioModel::create([
@@ -61,7 +91,7 @@ class BloqueService
                 'idFuncionario'   => $datos['idFuncionario'],
                 'tipoDeFormacion' => $datos['tipoDeFormacion'] ?? null,
             ]);
-            $bloque->dias()->attach($datos['dias']); // relacionar los días seleccionados
+            $bloque->dias()->attach($datos['dias']);
             return ['ok' => true, 'bloque' => $bloque->load(['funcionario', 'ambiente', 'dias'])];
         });
     }
@@ -76,7 +106,6 @@ class BloqueService
         if (!$bloque->dias->contains('idDia', $idDia))
             return ['ok' => false, 'mensaje' => 'El día no está asignado a este bloque.'];
 
-        // Verificar que no sea el único día antes de eliminar
         if ($bloque->dias->count() === 1)
             return ['ok' => false, 'codigo' => 'ULTIMO_DIA', 'mensaje' => 'No se puede eliminar el único día del bloque. Elimina el bloque completo.'];
 
@@ -89,7 +118,6 @@ class BloqueService
         ];
     }
 
-
     public function eliminarBloque(int $idBloque): array
     {
         $bloque = BloqueHorarioModel::find($idBloque);
@@ -98,7 +126,7 @@ class BloqueService
             return ['ok' => false, 'mensaje' => 'Bloque no encontrado.'];
 
         DB::transaction(function () use ($bloque) {
-            $bloque->dias()->detach(); // desvincula los días antes de borrar el bloque
+            $bloque->dias()->detach();
             $bloque->delete();
         });
 

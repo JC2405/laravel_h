@@ -28,8 +28,11 @@ class FuncionarioController extends Controller
      */
     public function store(createFuncionarioRequest $request)
     {
-        $crearFuncionario = $this->service->create($request->validated());
-        return response()->json($crearFuncionario);
+        // Obtiene los datos validados del request
+        $validated = $request->validated();
+        // Crea el funcionario y asigna el documento como contraseña por defecto
+        $crearFuncionario = $this->service->create($validated, $validated['documento']);
+        return response()->json($crearFuncionario, 201);
     }
 
     /**

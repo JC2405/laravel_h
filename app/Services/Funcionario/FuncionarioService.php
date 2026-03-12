@@ -12,13 +12,17 @@ class FuncionarioService
         return FuncionarioModel::with(['tipoContrato', 'areas'])->orderBy('idFuncionario')->paginate(FuncionarioModel::PAGINATION);
     }
 
-    public function create(array $data):FuncionarioModel
+    public function create(array $data, string $documento):FuncionarioModel
     {
+        // Asignar contraseña por defecto (número de documento) ANTES del INSERT
+        // El modelo la hasheará automáticamente gracias al cast 'hashed'
+        $data['password'] = $documento;
+
         $funcionario = FuncionarioModel::create($data);
 
-        // Default rol = 2 porque estoy ingresando al instructor
+        // Default rol = 2 (instructor)
         $funcionario->roles()->attach(2);
-        
+
         if (isset($data['areas'])) {
             $funcionario->areas()->sync($data['areas']);
         }
