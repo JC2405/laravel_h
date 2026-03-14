@@ -2,22 +2,24 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use PhpParser\Node\Const_;
+    use Illuminate\Database\Eloquent\Model;
 
-class SedeModel extends Model
-{
 
-    protected $table = 'sede';
-    protected $primaryKey = 'idSede';
-    public $timestamps =false;
-    protected $fillable = ['nombre','direccion','descripcion','estado','idMunicipio'];
-    public const PAGINATION = 10;
+    class SedeModel extends Model
+    {
 
-    public function municipio() {
-    return $this->belongsTo(MunicipioModel::class, 'idMunicipio', 'idMunicipio');
+        protected $table = 'sede';
+        protected $primaryKey = 'idSede';
+        public $timestamps =false;
+        protected $fillable = [
+            'nombre',
+            'direccion',
+            'descripcion',
+            'estado',
+            'idMunicipio'];
+        public const PAGINATION = 10;
+
+        public function municipio() {
+        return $this->belongsTo(MunicipioModel::class, 'idMunicipio', 'idMunicipio');
+        }
     }
-    public function ambientes() {
-        return $this->hasMany(AmbienteModel::class, 'idSede', 'idSede');
-    }
-}

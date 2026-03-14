@@ -86,7 +86,7 @@ class FuncionarioModel extends Authenticatable implements JWTSubject
     {
         return $this->belongsToMany(
             AreaModel::class,
-            'funcionario_area',
+            'funcionarioArea',
             'idFuncionario',
             'idArea'
         );
@@ -96,9 +96,9 @@ class FuncionarioModel extends Authenticatable implements JWTSubject
     {
         return $this->belongsToMany(
             \App\Models\RolModel::class,
-            'funcionario_rol',
+            'funcionarioRol',
             'idFuncionario',
             'idRol'
-        )->withPivot('fechaRegistro');
+        );
     }
 }   

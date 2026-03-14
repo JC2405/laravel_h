@@ -3,13 +3,15 @@
 namespace App\Services\Ficha;
 
 use App\Models\FichaModel;
-use Illuminate\Pagination\LengthAwarePaginator;
 
 class FichaService
 {
-    public function getAll():LengthAwarePaginator
+    public function getAll()
     {
-        return FichaModel::with('programa', 'ambiente')->orderBy('idFicha')->paginate(FichaModel::PAGINATION);
+        return FichaModel::with([
+            'programa.tipoFormacion',
+            'asignaciones.ambiente.sede',
+        ])->orderBy('idFicha')->get();
     }
 
 

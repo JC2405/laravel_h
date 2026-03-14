@@ -6,23 +6,24 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
         Schema::create('competencia', function (Blueprint $table) {
-            $table->id('idCompetencia');
+            $table->unsignedInteger('idCompetencia')->autoIncrement();
             $table->string('nombre', 200);
-            $table->string('codigo', 40)->unique('uq_competencia_codigo');
+            $table->string('codigo', 40)->unique('uqCompetenciaCodigo');
             $table->string('tipo', 50);
             $table->integer('horas')->nullable();
-            $table->string('estado', 20);
-            $table->unsignedBigInteger('idPrograma')->nullable();
-
-            $table->foreign('idPrograma', 'fk_competencia_programa')
-                  ->references('idPrograma')->on('programa')
-                  ->onUpdate('cascade');
+            
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
         Schema::dropIfExists('competencia');

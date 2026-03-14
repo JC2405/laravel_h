@@ -15,7 +15,6 @@ class RolModel extends Model
 
     public function funcionarios()
     {
-        return $this->belongsToMany(FuncionarioModel::class, 'funcionario_rol', 'idRol', 'idFuncionario')
-                    ->withPivot('fechaRegistro');
+        return $this->belongsToMany(FuncionarioModel::class, 'funcionarioRol', 'idRol', 'idFuncionario');
     }
 }

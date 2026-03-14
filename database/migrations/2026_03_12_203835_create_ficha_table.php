@@ -6,29 +6,30 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
-        Schema::create('ficha', function (Blueprint $table) {
-            $table->id('idFicha');
-            $table->string('codigoFicha', 40)->unique('uq_ficha_codigo');
+         Schema::create('ficha', function (Blueprint $table) {
+            $table->unsignedInteger('idFicha')->autoIncrement();
+            $table->string('codigoFicha', 40)->unique('uqFichaCodigo');
             $table->string('jornada', 30);
             $table->date('fechaInicio')->nullable();
             $table->date('fechaFin')->nullable();
-            $table->string('estado', 20);
+           $table->string('estado',20)->default('Activo');
             $table->string('modalidad', 30);
-            $table->unsignedBigInteger('idPrograma');
-            $table->unsignedBigInteger('idAmbiente')->nullable();
-
-            $table->foreign('idPrograma', 'fk_ficha_programa')
+            $table->unsignedInteger('idPrograma');
+ 
+            $table->foreign('idPrograma', 'fkFichaPrograma')
                   ->references('idPrograma')->on('programa')
                   ->onUpdate('cascade');
-
-            $table->foreign('idAmbiente', 'fk_ficha_ambiente')
-                  ->references('idAmbiente')->on('ambiente')
-                  ->onUpdate('cascade');
-        });
+         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
         Schema::dropIfExists('ficha');

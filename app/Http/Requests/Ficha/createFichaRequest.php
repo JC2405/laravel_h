@@ -29,7 +29,7 @@ class createFichaRequest extends FormRequest
             'estado'=>'required|string|max:255',
             'modalidad'=>'required|string|max:255',
             'idPrograma'=>'required|integer|max:255',
-            'idAmbiente'=>'required|integer|max:255'
+ 
         ];
     }
 }

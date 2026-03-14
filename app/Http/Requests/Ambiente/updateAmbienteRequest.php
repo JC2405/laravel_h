@@ -24,7 +24,6 @@ class updateAmbienteRequest extends FormRequest
         return [
             'codigo'=>'required|string|max:255',
             'capacidad'=>'required|integer',
-            'numero'=> 'required|string|max:255',
             'descripcion'=> 'required|string|max:255',
             'bloque'=> 'required|string|max:255',
             'estado'=> 'required|string|max:255',

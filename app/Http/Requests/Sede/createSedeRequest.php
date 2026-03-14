@@ -23,10 +23,10 @@ class createSedeRequest extends FormRequest
     {
         return [
             'nombre'=>'required|string|max:255',
-            'direccion'=>'required|string|max:255',
-            'descripcion'=>'required|string|max:255',
+            'direccion'=>'nullable|string|max:255',
+            'descripcion'=>'nullable|string|max:255',
             'estado'=>'required|string|max:255',
-            'idMunicipio'=>'required|int',
+            'idMunicipio'=>'required|integer',
         ];
     }
 }

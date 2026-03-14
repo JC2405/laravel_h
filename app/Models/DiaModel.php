@@ -11,4 +11,7 @@ class DiaModel extends Model
     public $timestamps = false;
     protected $fillable = ['nombre'];
     public const PAGINATION = 10;
+
+
+    
 }

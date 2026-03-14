@@ -6,10 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class TipoContratoModel extends Model
 {
-    protected $table = 'tipo_contrato';
+    protected $table = 'tipoContrato';
     protected $primaryKey = 'idTipoContrato';
     public $timestamps = false;
-    protected $fillable = ['nombre'];
+    protected $fillable = ['nombreTipoContrato'];
     public const PAGINATION = 10; 
 
     public function funcionarios() {

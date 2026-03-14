@@ -7,111 +7,145 @@ use Illuminate\Support\Facades\DB;
 class DeteccionConflictoService
 {
     /**
-     * Conflicto de instructor SIN fechas.
-     * Usado al crear bloques independientes (sin asignación).
+     * Esquema real (según diagrama):
+     *   asignacion  (idAsignacion, idFuncionario, idAmbiente, idFicha, modalidad, estado)
+     *   bloque      (idBloque, idAsignacion, fechaInicio, fechaFin, horaInicio, horaFin, estado, observaciones)
+     *   bloquedia   (idBloqueDia, idBloque, idDia)
+     *   dia         (idDia, nombreDia)
      */
-    public function detectarConfictoInstructor(int $idFuncionario,string $horaInicio,string $horaFin,array $dias,?int $excluirBloque = null
-    ) {
-        return DB::table('bloque_horario as bh')
-            ->join('bloque_dia as bd', 'bh.idBloque', '=', 'bd.idBloque')
-            ->join('funcionario as f',  'bh.idFuncionario', '=', 'f.idFuncionario')
-            ->where('bh.idFuncionario', $idFuncionario)
-            ->whereIn('bd.idDia', $dias)
-            ->where('bh.hora_inicio', '<', $horaFin)
-            ->where('bh.hora_fin',    '>', $horaInicio)
-            ->when($excluirBloque, fn($q) => $q->where('bh.idBloque', '!=', $excluirBloque))
-            ->select('bh.idBloque', 'bh.hora_inicio', 'bh.hora_fin', DB::raw('f.nombre as instructor_nombre'))
-            ->first();
-    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    //  INSTRUCTOR
+    // ─────────────────────────────────────────────────────────────────────────
 
     /**
-     * Conflicto de ambiente SIN fechas.
-     * Usado al crear bloques independientes (sin asignación).
+     * ¿El instructor ya tiene clase en ese horario, días y rango de fechas?
+     *
+     * @param int      $idFuncionario
+     * @param string   $horaInicio    "HH:MM:SS"
+     * @param string   $horaFin       "HH:MM:SS"
+     * @param array    $dias          array de idDia
+     * @param string   $fechaInicio   "YYYY-MM-DD"
+     * @param string   $fechaFin      "YYYY-MM-DD"
+     * @param int|null $excluirBloque idBloque a ignorar (al editar)
+     * @param int|null $excluirFicha  idFicha  a ignorar (al editar)
      */
-    public function detectarConflictoAmbiente(int $idAmbiente,string $horaInicio,string $horaFin,array $dias,?int $excluirFicha = null
-    ) {
-        $query = DB::table('bloque_horario as bh')
-            ->join('bloque_dia as bd', 'bh.idBloque', '=', 'bd.idBloque')
-            ->join('funcionario as f',  'bh.idFuncionario', '=', 'f.idFuncionario')
-            ->where('bh.idAmbiente', $idAmbiente)
-            ->whereIn('bd.idDia', $dias)
-            ->where('bh.hora_inicio', '<', $horaFin)
-            ->where('bh.hora_fin',    '>', $horaInicio);
-
-        if ($excluirFicha) {
-            $bloquesDeLaFicha = DB::table('asignacion')
-                ->where('idFicha', $excluirFicha)
-                ->pluck('idBloque')
-                ->toArray();
-
-            if (!empty($bloquesDeLaFicha)) {
-                $query->whereNotIn('bh.idBloque', $bloquesDeLaFicha);
-            }
-        }
-
-        return $query
-            ->select('bh.idBloque', 'bh.hora_inicio', 'bh.hora_fin', DB::raw('f.nombre as instructor_nombre'))
-            ->first();
-    }
-
-    /**
-     * Conflicto de instructor CON fechas.
-     * Usado al crear asignaciones. Un instructor no puede tener dos fichas
-     * en el mismo horario, días y rango de fechas.
-     * Sí puede tener fichas distintas en horarios diferentes dentro del mismo período.
-     */
-    public function detectarConflictoInstructorAsignacion(int $idFuncionario,string $horaInicio,string $horaFin,array $dias,string $fechaInicio,string $fechaFin,?int $excluirBloque = null,?int $excluirFicha  = null
+    public function detectarConflictoInstructor(
+        int    $idFuncionario,
+        string $horaInicio,
+        string $horaFin,
+        array  $dias,
+        string $fechaInicio,
+        string $fechaFin,
+        ?int   $excluirBloque = null,
+        ?int   $excluirFicha  = null
     ) {
         return DB::table('asignacion as a')
-        ->join('bloque_horario as bh', 'a.idBloque',      '=', 'bh.idBloque')
-        ->join('bloque_dia as bd',     'bh.idBloque',     '=', 'bd.idBloque')
-        ->join('funcionario as func',  'bh.idFuncionario','=', 'func.idFuncionario')
-        ->join('ficha as f',           'a.idFicha',       '=', 'f.idFicha')
-        ->where('bh.idFuncionario', $idFuncionario)
-        ->whereIn('bd.idDia', $dias)
-        ->where('bh.hora_inicio', '<', $horaFin)
-        ->where('bh.hora_fin',    '>', $horaInicio)
-        ->where('a.fecha_inicio', '<=', $fechaFin)
-        ->where('a.fecha_fin',    '>=', $fechaInicio)
-        ->when($excluirBloque, fn($q) => $q->where('bh.idBloque', '!=', $excluirBloque))
-        ->when($excluirFicha,  fn($q) => $q->where('a.idFicha',   '!=', $excluirFicha))
+            ->join('bloque as bl',        'bl.idAsignacion',   '=', 'a.idAsignacion')
+            ->join('bloquedia as bd',     'bd.idBloque',       '=', 'bl.idBloque')
+            ->join('funcionario as func', 'func.idFuncionario','=', 'a.idFuncionario')
+            ->join('ficha as f',          'f.idFicha',         '=', 'a.idFicha')
+            ->where('a.idFuncionario', $idFuncionario)
+            ->whereIn('bd.idDia', $dias)
+            // solapamiento de hora
+            ->where('bl.horaInicio', '<', $horaFin)
+            ->where('bl.horaFin',    '>', $horaInicio)
+            // solapamiento de fecha
+            ->where('bl.fechaInicio', '<=', $fechaFin)
+            ->where('bl.fechaFin',    '>=', $fechaInicio)
+            ->when($excluirBloque, fn($q) => $q->where('bl.idBloque', '!=', $excluirBloque))
+            ->when($excluirFicha,  fn($q) => $q->where('a.idFicha',  '!=', $excluirFicha))
             ->select(
-                'bh.idBloque',
-                'bh.hora_inicio',
-                'bh.hora_fin',
+                'bl.idBloque',
+                'bl.horaInicio',
+                'bl.horaFin',
+                'bl.fechaInicio',
+                'bl.fechaFin',
                 'f.codigoFicha',
                 DB::raw('func.nombre as instructor_nombre')
             )
             ->first();
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    //  AMBIENTE
+    // ─────────────────────────────────────────────────────────────────────────
+
     /**
-     * Conflicto de ambiente CON fechas.
-     * Usado al crear asignaciones. Un ambiente no puede estar ocupado
-     * en el mismo horario, días y rango de fechas.
+     * ¿El ambiente ya está ocupado en ese horario, días y rango de fechas?
+     *
+     * @param int      $idAmbiente
+     * @param string   $horaInicio
+     * @param string   $horaFin
+     * @param array    $dias
+     * @param string   $fechaInicio
+     * @param string   $fechaFin
+     * @param int|null $excluirBloque
+     * @param int|null $excluirFicha
      */
-    public function detectarConflictoAmbienteAsignacion(int $idAmbiente,string $horaInicio,string $horaFin,array $dias,string $fechaInicio,string $fechaFin,?int $excluirBloque = null,?int $excluirFicha  = null
+    public function detectarConflictoAmbiente(
+        int    $idAmbiente,
+        string $horaInicio,
+        string $horaFin,
+        array  $dias,
+        string $fechaInicio,
+        string $fechaFin,
+        ?int   $excluirBloque = null,
+        ?int   $excluirFicha  = null
     ) {
         return DB::table('asignacion as a')
-            ->join('bloque_horario as bh', 'a.idBloque',      '=', 'bh.idBloque')
-            ->join('bloque_dia as bd',     'bh.idBloque',     '=', 'bd.idBloque')
-            ->join('funcionario as func',  'bh.idFuncionario','=', 'func.idFuncionario')
-            ->join('ficha as f',           'a.idFicha',       '=', 'f.idFicha')
-            ->where('bh.idAmbiente', $idAmbiente)
+            ->join('bloque as bl',        'bl.idAsignacion',   '=', 'a.idAsignacion')
+            ->join('bloquedia as bd',     'bd.idBloque',       '=', 'bl.idBloque')
+            ->join('funcionario as func', 'func.idFuncionario','=', 'a.idFuncionario')
+            ->join('ficha as f',          'f.idFicha',         '=', 'a.idFicha')
+            ->where('a.idAmbiente', $idAmbiente)
             ->whereIn('bd.idDia', $dias)
-            ->where('bh.hora_inicio', '<', $horaFin)
-            ->where('bh.hora_fin',    '>', $horaInicio)
-            ->where('a.fecha_inicio', '<=', $fechaFin)
-            ->where('a.fecha_fin',    '>=', $fechaInicio)
-            ->when($excluirBloque, fn($q) => $q->where('bh.idBloque', '!=', $excluirBloque))
-            ->when($excluirFicha,  fn($q) => $q->where('a.idFicha',   '!=', $excluirFicha))
+            ->where('bl.horaInicio', '<', $horaFin)
+            ->where('bl.horaFin',    '>', $horaInicio)
+            ->where('bl.fechaInicio', '<=', $fechaFin)
+            ->where('bl.fechaFin',    '>=', $fechaInicio)
+            ->when($excluirBloque, fn($q) => $q->where('bl.idBloque', '!=', $excluirBloque))
+            ->when($excluirFicha,  fn($q) => $q->where('a.idFicha',  '!=', $excluirFicha))
             ->select(
-                'bh.idBloque',
-                'bh.hora_inicio',
-                'bh.hora_fin',
+                'bl.idBloque',
+                'bl.horaInicio',
+                'bl.horaFin',
+                'bl.fechaInicio',
+                'bl.fechaFin',
                 'f.codigoFicha',
                 DB::raw('func.nombre as instructor_nombre')
             )
             ->first();
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    //  HELPER: los dos a la vez
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Devuelve ['instructor' => ..., 'ambiente' => ...].
+     * Cada valor es el registro conflictivo o null.
+     */
+    public function detectarConflictos(
+        int    $idFuncionario,
+        int    $idAmbiente,
+        string $horaInicio,
+        string $horaFin,
+        array  $dias,
+        string $fechaInicio,
+        string $fechaFin,
+        ?int   $excluirBloque = null,
+        ?int   $excluirFicha  = null
+    ): array {
+        return [
+            'instructor' => $this->detectarConflictoInstructor(
+                $idFuncionario, $horaInicio, $horaFin, $dias,
+                $fechaInicio, $fechaFin, $excluirBloque, $excluirFicha
+            ),
+            'ambiente' => $this->detectarConflictoAmbiente(
+                $idAmbiente, $horaInicio, $horaFin, $dias,
+                $fechaInicio, $fechaFin, $excluirBloque, $excluirFicha
+            ),
+        ];
     }
 }

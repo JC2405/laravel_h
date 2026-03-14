@@ -6,22 +6,29 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
         Schema::create('sede', function (Blueprint $table) {
-            $table->id('idSede');
+             $table->unsignedInteger('idSede')->autoIncrement();
             $table->string('nombre', 120);
             $table->string('direccion', 255)->nullable();
             $table->string('descripcion', 255)->nullable();
-            $table->string('estado', 20);
-            $table->unsignedBigInteger('idMunicipio')->nullable();
-
-            $table->foreign('idMunicipio', 'fk_sede_municipio')
-                  ->references('idMunicipio')->on('municipio')
-                  ->onUpdate('cascade');
+            $table->string('estado',20)->default('Activo');
+            $table->unsignedInteger('idMunicipio')->nullable();
+ 
+            $table->foreign('idMunicipio', 'fkSedeMunicipio')
+                ->references('idMunicipio')
+                ->on('municipio')
+                ->onUpdate('cascade');
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
         Schema::dropIfExists('sede');

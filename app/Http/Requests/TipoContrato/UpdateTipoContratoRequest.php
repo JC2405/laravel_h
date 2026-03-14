@@ -22,7 +22,7 @@ class UpdateTipoContratoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nombre'=>'required|string|max:255'
+            'nombreTipoContrato'=>'required|string|max:255'
         ];
     }
 }

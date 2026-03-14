@@ -21,9 +21,6 @@ class AmbienteModel extends Model
         public function area() {
             return $this->belongsTo(AreaModel::class, 'idArea', 'idArea');
         }
-        public function fichas() {
-            return $this->hasMany(FichaModel::class, 'idAmbiente', 'idAmbiente');
-        }
 
         public function bloques() {
         return $this->hasMany(BloqueHorarioModel::class, 'idAmbiente', 'idAmbiente');

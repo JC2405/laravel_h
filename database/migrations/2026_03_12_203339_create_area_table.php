@@ -6,15 +6,14 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-   
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
-        Schema::create('posts', function (Blueprint $table) {
-            $table->id();
-            $table->string('tittle');
-            $table->text('content');
-            $table->text('status',['draft' , 'published'])->default('draft');
-            $table->timestamps();
+        Schema::create('area', function (Blueprint $table) {
+           $table->unsignedInteger('idArea')->autoIncrement();
+           $table->string('nombreArea', 100)->unique('uqAreaNombre');
         });
     }
 
@@ -23,6 +22,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('posts');
+        Schema::dropIfExists('area');
     }
 };

@@ -9,19 +9,29 @@ class AsignacionModel extends Model
     public    $timestamps = false;
 
     protected $fillable = [
-        'fecha_inicio',
-        'fecha_fin',
-        'estado',
-        'idBloque',
+        'idFuncionario',
+        'idAmbiente',
         'idFicha',
+        'modalidad',
+        'estado',
     ];
 
     public const PAGINATION = 10;
 
-    public function bloque() {
-        return $this->belongsTo(BloqueHorarioModel::class, 'idBloque', 'idBloque');
-    }
+    public function funcionario(){
+        return $this->belongsTo(FuncionarioModel::class, 'idFuncionario','idFuncionario');
+   }
+
+   public function ambiente(){
+    return $this->belongsTo(AmbienteModel::class,'idAmbiente', 'idAmbiente');
+   }
+
     public function ficha() {
         return $this->belongsTo(FichaModel::class, 'idFicha', 'idFicha');
+    }
+    // En AsignacionModel.php
+    public function bloque()
+    {
+        return $this->hasOne(BloqueHorarioModel::class, 'idAsignacion', 'idAsignacion');
     }
 }

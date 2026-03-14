@@ -22,8 +22,8 @@ class createTipoFormacionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            "nombre"=>"required|string|max:255",
-            "duracion_meses"=>"required|integer"
+            "nombreTipoFormacion"=>"required|string|max:255",
+            "duracionMeses"=>"required|integer"
         ];
     }
 }

@@ -1,5 +1,7 @@
 <?php
+
 namespace App\Http\Requests\Horario;
+
 use Illuminate\Foundation\Http\FormRequest;
 
 class CreateAsignacionRequest extends FormRequest
@@ -9,22 +11,35 @@ class CreateAsignacionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // Asignación
-            'idBloque'        => 'nullable|integer|exists:bloque_horario,idBloque',
-            'idFicha'         => 'required|integer|exists:ficha,idFicha',
-            'fecha_inicio'    => 'required|date',
-            'fecha_fin'       => 'required|date|after_or_equal:fecha_inicio',
-            'estado'          => 'nullable|string|max:20',
+            // ── Asignación ────────────────────────────────────────────────
+            'idFuncionario'  => 'required|integer|exists:funcionario,idFuncionario',
+            'idFicha'        => 'required|integer|exists:ficha,idFicha',
+            'idAmbiente'     => 'nullable|integer|exists:ambiente,idAmbiente',
+            'modalidad'      => 'required|string|in:presencial,virtual',
+            'estado'         => 'nullable|string|max:50',
 
-            // Bloque (Requeridos si no hay idBloque)
-            'hora_inicio'     => 'required_without:idBloque|date_format:H:i:s',
-            'hora_fin'        => 'required_without:idBloque|date_format:H:i:s|after:hora_inicio',
-            'modalidad'       => 'required_without:idBloque|string|in:presencial,virtual',
-            'tipoDeFormacion' => 'required_without:idBloque|string',
-            'idFuncionario'   => 'required_without:idBloque|integer|exists:funcionario,idFuncionario',
-            'idAmbiente'      => 'nullable|integer|exists:ambiente,idAmbiente',
-            'dias'            => 'required_without:idBloque|array',
-            'dias.*'          => 'integer|exists:dia,idDia',
+            // ── Bloque ────────────────────────────────────────────────────
+            'fechaInicio'    => 'required|date',
+            'fechaFin'       => 'required|date|after_or_equal:fechaInicio',
+            'horaInicio'     => 'required|date_format:H:i,H:i:s',
+            'horaFin'        => 'required|date_format:H:i,H:i:s|after:horaInicio',
+            'observaciones'  => 'nullable|string|max:500',
+            'tipoDeFormacion'=> 'nullable|string|max:100',
+
+            // ── Días ─────────────────────────────────────────────────────
+            'dias'           => 'required|array|min:1',
+            'dias.*'         => 'integer|exists:dia,idDia',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'fechaFin.after_or_equal' => 'La fecha fin debe ser igual o posterior a la fecha de inicio.',
+            'horaFin.after'           => 'La hora fin debe ser posterior a la hora de inicio.',
+            'dias.required'           => 'Debes seleccionar al menos un día.',
+            'dias.min'                => 'Debes seleccionar al menos un día.',
+            'dias.*.exists'           => 'Uno o más días seleccionados no son válidos.',
         ];
     }
 }

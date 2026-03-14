@@ -16,7 +16,5 @@ class CompetenciaModel extends Model
         return $this->belongsTo(ProgramaModel::class, 'idPrograma', 'idPrograma');
     }
     
-    public function resultados() {
-    //    return $this->hasMany(ResultadoAprendizajeModel::class, 'idCompetencia', 'idCompetencia');
-    }
+    
 }

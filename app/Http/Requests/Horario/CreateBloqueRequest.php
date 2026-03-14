@@ -9,13 +9,13 @@ class CreateBloqueRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'hora_inicio'     => 'required|date_format:H:i:s',
-            'hora_fin'        => 'required|date_format:H:i:s|after:hora_inicio',
-            'modalidad'       => 'required|in:presencial,virtual',
-            'tipoDeFormacion' => 'required|string|max:255',
-            'idAmbiente'      => 'nullable|integer|exists:ambiente,idAmbiente',
-            'idFuncionario'   => 'required|integer|exists:funcionario,idFuncionario',
-            'idFicha'         => 'nullable|integer|exists:ficha,idFicha', // Opcional, para excluir conflictos de la misma ficha
+            'fechaInicio'     => 'required|date_format:H:i:s',
+            'fechaFin'        => 'required|date_format:H:i:s|after:hora_inicio',
+            'horaInicio'       => 'required|string|max:255',
+            'horaFin' => 'required|string|max:255',
+            'estado'      => 'nullable|integer|exists:ambiente,idAmbiente',
+            'observaciones'   => 'required|integer|exists:funcionario,idFuncionario',
+            'idAsignacion'         => 'nullable|integer|exists:asignacion,idAsignacion',
             'dias'            => 'required|array|min:1',
             'dias.*'          => 'integer|exists:dia,idDia',
         ];
