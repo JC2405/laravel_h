@@ -5,47 +5,124 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Horario\CreateAsignacionRequest;
 use App\Services\Horario\AsignacionService;
 
+/**
+ * HorarioController
+ *
+ * Recibe las peticiones HTTP relacionadas con horarios y las delega
+ * al AsignacionService, que contiene toda la lógica de negocio.
+ *
+ * El controller solo se encarga de:
+ *  - Extraer los datos del request
+ *  - Llamar al service
+ *  - Devolver la respuesta JSON con el código HTTP correcto
+ */
 class HorarioController extends Controller
 {
     public function __construct(
-        protected AsignacionService $asignaciones,
+        protected AsignacionService $servicioAsignaciones,
     ) {}
 
-    // ─────────────────────────────────────────────────────────────────────────
-    //  ASIGNACIONES
-    // ─────────────────────────────────────────────────────────────────────────
+    // =========================================================================
+    //  CREAR / ELIMINAR ASIGNACIONES
+    // =========================================================================
 
+    /**
+     * POST /api/crearAsignacion
+     *
+     * Crea una asignación completa: asignación + bloque horario + días.
+     * Los datos son validados por CreateAsignacionRequest antes de llegar aquí.
+     */
     public function storeAsignacion(CreateAsignacionRequest $request)
     {
-        $resultado = $this->asignaciones->crearAsignacion($request->validated());
+        $resultado = $this->servicioAsignaciones->crearAsignacion($request->validated());
 
-        if (!$resultado['ok'])
+        if (!$resultado['ok']) {
+            // Elegir el código HTTP apropiado según el tipo de error
+            $codigoHTTP = match ($resultado['codigo'] ?? '') {
+                'CONFLICTO'                                => 409, // Conflict
+                'AMBIENTE_REQUERIDO',
+                'FECHA_INVALIDA',
+                'HORA_INVALIDA',
+                'DIAS_REQUERIDOS'                          => 422, // Unprocessable Entity
+                default                                    => $resultado['http'] ?? 422,
+            };
+
             return response()->json([
-                'message'   => $resultado['mensaje'],
-                'codigo'    => $resultado['codigo']    ?? null,
-                'conflicto' => $resultado['conflicto'] ?? null,
-            ], $resultado['codigo'] === 'CONFLICTO' ? 409 : 422);
+                'message' => $resultado['mensaje'],
+                'codigo'  => $resultado['codigo'] ?? null,
+            ], $codigoHTTP);
+        }
 
+        // 201 Created al crear exitosamente
         return response()->json($resultado['asignacion'], 201);
     }
 
+    /**
+     * DELETE /api/eliminarAsignacion/{idAsignacion}
+     *
+     * Elimina una asignación completa junto con su bloque horario y días.
+     */
     public function destroyAsignacion(int $idAsignacion)
     {
-        $resultado = $this->asignaciones->eliminarAsignacion($idAsignacion);
+        $resultado = $this->servicioAsignaciones->eliminarAsignacion($idAsignacion);
 
-        if (!$resultado['ok'])
-            return response()->json(['message' => $resultado['mensaje']], 404);
+        if (!$resultado['ok']) {
+            $codigoHTTP = $resultado['http'] ?? 404;
+            return response()->json(['message' => $resultado['mensaje']], $codigoHTTP);
+        }
 
         return response()->json(['message' => $resultado['mensaje']]);
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    //  LISTAR
-    // ─────────────────────────────────────────────────────────────────────────
+    /**
+     * DELETE /api/eliminarDiaDeBloque/{idBloque}/{idDia}
+     *
+     * Elimina un día específico de un bloque horario.
+     *
+     * Comportamiento:
+     *  - Si el bloque tiene más de un día → solo elimina ese día.
+     *  - Si es el último día → elimina el día, el bloque y la asignación completa.
+     *
+     * La respuesta incluye el campo "accion" para que el frontend sepa qué pasó:
+     *  'DIA_ELIMINADO'       → se quitó solo ese día
+     *  'ASIGNACION_ELIMINADA' → se borró todo porque era el último día
+     */
+    public function destroyDiaDeBloque(int $idBloque, int $idDia)
+    {
+        $resultado = $this->servicioAsignaciones->eliminarDiaDeBloque($idBloque, $idDia);
 
+        if (!$resultado['ok']) {
+            $codigoHTTP = match ($resultado['codigo'] ?? '') {
+                'NO_ENCONTRADO'    => 404,
+                'DIA_NO_PERTENECE' => 422,
+                default            => $resultado['http'] ?? 422,
+            };
+
+            return response()->json([
+                'message' => $resultado['mensaje'],
+                'codigo'  => $resultado['codigo'],
+            ], $codigoHTTP);
+        }
+
+        return response()->json([
+            'message' => $resultado['mensaje'],
+            'accion'  => $resultado['accion'], // 'DIA_ELIMINADO' | 'ASIGNACION_ELIMINADA'
+        ]);
+    }
+
+    // =========================================================================
+    //  CONSULTAS
+    // =========================================================================
+
+    /**
+     * GET /api/horariosPorFicha/{idFicha}
+     *
+     * Devuelve las asignaciones de una ficha más la grilla lista para
+     * renderizar en el calendario del frontend.
+     */
     public function horariosPorFicha(int $idFicha)
     {
-        $resultado = $this->asignaciones->listarPorFicha($idFicha);
+        $resultado = $this->servicioAsignaciones->listarAsignacionesPorFicha($idFicha);
 
         return response()->json([
             'asignaciones' => $resultado['asignaciones'],
@@ -53,9 +130,14 @@ class HorarioController extends Controller
         ]);
     }
 
+    /**
+     * GET /api/horarioPorInstructor/{idFuncionario}
+     *
+     * Devuelve las clases de un instructor más su grilla horaria personal.
+     */
     public function listarFuncionarioPorHorario(int $idFuncionario)
     {
-        $resultado = $this->asignaciones->listarClasesPorInstructor($idFuncionario);
+        $resultado = $this->servicioAsignaciones->listarClasesPorInstructor($idFuncionario);
         return response()->json($resultado);
     }
 }
