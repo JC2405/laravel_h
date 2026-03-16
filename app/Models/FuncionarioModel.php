@@ -25,7 +25,6 @@ class FuncionarioModel extends Authenticatable implements JWTSubject
         'password'
     ];
 
-    // 🔐 Hasheo automático de contraseña
     protected function casts(): array
     {
         return [
@@ -41,15 +40,24 @@ class FuncionarioModel extends Authenticatable implements JWTSubject
         return $this->getKey();
     }
 
-   public function getJWTCustomClaims(): array
+    public function getJWTCustomClaims(): array
     {
-    $rol = $this->roles->first();
+        // Aseguramos que los roles estén cargados
+        if (!$this->relationLoaded('roles')) {
+            $this->load('roles');
+        }
 
-    return [
-        'guard'  => 'funcionario',
-        'rol'    => $rol ? strtolower($rol->nombreRol) : null,
-        'nombre' => $this->nombre,
-    ];
+        $rol = $this->roles->first();
+
+        // nombreRol viene de la tabla 'rol' — lo normalizamos a minúsculas
+        // para que el frontend siempre reciba 'instructor' o 'coordinador'
+        $nombreRol = $rol ? strtolower(trim($rol->nombreRol)) : null;
+
+        return [
+            'guard'  => 'funcionario',
+            'rol'    => $nombreRol,
+            'nombre' => $this->nombre,
+        ];
     }
 
     // ── Authenticatable helpers ───────────────────────────────
@@ -101,4 +109,4 @@ class FuncionarioModel extends Authenticatable implements JWTSubject
             'idRol'
         );
     }
-}   
+}

@@ -15,7 +15,6 @@ class AuthService
             ->where('correo', $credentials['correo'])
             ->first();
 
-      
         if (!$funcionario) {
             return ['ok' => false, 'mensaje' => 'Credenciales incorrectas.'];
         }
@@ -23,7 +22,6 @@ class AuthService
         try {
             $passwordValido = Hash::check($credentials['password'], $funcionario->password);
         } catch (\RuntimeException $e) {
-            // Por si no entra hasheada las ppassword
             return ['ok' => false, 'mensaje' => 'El password no tiene el formato correcto. Contacta al administrador.'];
         }
 
@@ -36,20 +34,20 @@ class AuthService
         }
 
         try {
-            // ✅ JWTAuth::fromUser() genera el token directamente desde el modelo
             $token = JWTAuth::fromUser($funcionario);
         } catch (JWTException $e) {
             return ['ok' => false, 'mensaje' => 'No se pudo generar el token.'];
         }
 
-        $rol       = $funcionario->roles->first();
-        $nombreRol = $rol ? strtolower($rol->nombreRol) : null;
+        $rolModel  = $funcionario->roles->first();
+        // La columna en la tabla 'rol' se llama 'rol' (no 'nombreRol')
+        $nombreRol = $rolModel ? strtolower(trim($rolModel->rol)) : null;
 
         return [
             'ok'      => true,
             'token'   => $token,
             'tipo'    => 'Bearer',
-            'expira'  => config('jwt.ttl') * 60, // ✅ lee directo del config/jwt.php
+            'expira'  => config('jwt.ttl') * 60,
             'usuario' => [
                 'id'     => $funcionario->idFuncionario,
                 'nombre' => $funcionario->nombre,
@@ -63,7 +61,6 @@ class AuthService
     public function refresh(): array
     {
         try {
-            // ✅ JWTAuth::refresh() renueva el token del request actual
             $nuevoToken = JWTAuth::refresh(JWTAuth::getToken());
             return ['ok' => true, 'token' => $nuevoToken, 'tipo' => 'Bearer'];
         } catch (JWTException $e) {
@@ -73,7 +70,6 @@ class AuthService
 
     public function logout(): void
     {
-        // ✅ JWTAuth::invalidate() añade el token a la blacklist
         JWTAuth::invalidate(JWTAuth::getToken());
     }
 

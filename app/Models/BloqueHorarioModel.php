@@ -14,6 +14,7 @@ class BloqueHorarioModel extends Model
         'fechaFin',
         'horaInicio',
         'horaFin',
+        'estado',
         'observaciones',
     ];
 
@@ -22,8 +23,13 @@ class BloqueHorarioModel extends Model
     public function asignacion() {
         return $this->belongsTo(AsignacionModel::class, 'idAsignacion', 'idAsignacion');
     }
+
     public function dias() {
-    return $this->belongsToMany(
-        \App\Models\DiaModel::class,'bloquedia','idBloque','idDia');
+        return $this->belongsToMany(
+            DiaModel::class,
+            'bloqueDia',  // tabla pivot correcta (mayúscula D)
+            'idBloque',   // FK hacia este modelo (bloque)
+            'idDia'       // FK hacia DiaModel
+        );
     }
 }

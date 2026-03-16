@@ -21,28 +21,12 @@ class DeteccionConflictoService
     /**
      * ¿El instructor ya tiene clase en ese horario, días y rango de fechas?
      *
-     * @param int      $idFuncionario
-     * @param string   $horaInicio    "HH:MM:SS"
-     * @param string   $horaFin       "HH:MM:SS"
-     * @param array    $dias          array de idDia
-     * @param string   $fechaInicio   "YYYY-MM-DD"
-     * @param string   $fechaFin      "YYYY-MM-DD"
-     * @param int|null $excluirBloque idBloque a ignorar (al editar)
-     * @param int|null $excluirFicha  idFicha  a ignorar (al editar)
      */
-    public function detectarConflictoInstructor(
-        int    $idFuncionario,
-        string $horaInicio,
-        string $horaFin,
-        array  $dias,
-        string $fechaInicio,
-        string $fechaFin,
-        ?int   $excluirBloque = null,
-        ?int   $excluirFicha  = null
+    public function detectarConflictoInstructor(int $idFuncionario,string $horaInicio,string $horaFin,array  $dias,string $fechaInicio,string $fechaFin,?int   $excluirBloque = null,?int   $excluirFicha  = null
     ) {
         return DB::table('asignacion as a')
             ->join('bloque as bl',        'bl.idAsignacion',   '=', 'a.idAsignacion')
-            ->join('bloquedia as bd',     'bd.idBloque',       '=', 'bl.idBloque')
+            ->join('bloqueDia as bd',    'bd.idBloque',       '=', 'bl.idBloque')
             ->join('funcionario as func', 'func.idFuncionario','=', 'a.idFuncionario')
             ->join('ficha as f',          'f.idFicha',         '=', 'a.idFicha')
             ->where('a.idFuncionario', $idFuncionario)
@@ -74,28 +58,13 @@ class DeteccionConflictoService
     /**
      * ¿El ambiente ya está ocupado en ese horario, días y rango de fechas?
      *
-     * @param int      $idAmbiente
-     * @param string   $horaInicio
-     * @param string   $horaFin
-     * @param array    $dias
-     * @param string   $fechaInicio
-     * @param string   $fechaFin
-     * @param int|null $excluirBloque
-     * @param int|null $excluirFicha
+
      */
-    public function detectarConflictoAmbiente(
-        int    $idAmbiente,
-        string $horaInicio,
-        string $horaFin,
-        array  $dias,
-        string $fechaInicio,
-        string $fechaFin,
-        ?int   $excluirBloque = null,
-        ?int   $excluirFicha  = null
+    public function detectarConflictoAmbiente(int    $idAmbiente,string $horaInicio,string $horaFin,array  $dias,string $fechaInicio,string $fechaFin,?int   $excluirBloque = null,?int   $excluirFicha  = null
     ) {
         return DB::table('asignacion as a')
             ->join('bloque as bl',        'bl.idAsignacion',   '=', 'a.idAsignacion')
-            ->join('bloquedia as bd',     'bd.idBloque',       '=', 'bl.idBloque')
+            ->join('bloqueDia as bd',    'bd.idBloque',       '=', 'bl.idBloque')
             ->join('funcionario as func', 'func.idFuncionario','=', 'a.idFuncionario')
             ->join('ficha as f',          'f.idFicha',         '=', 'a.idFicha')
             ->where('a.idAmbiente', $idAmbiente)
@@ -126,16 +95,7 @@ class DeteccionConflictoService
      * Devuelve ['instructor' => ..., 'ambiente' => ...].
      * Cada valor es el registro conflictivo o null.
      */
-    public function detectarConflictos(
-        int    $idFuncionario,
-        int    $idAmbiente,
-        string $horaInicio,
-        string $horaFin,
-        array  $dias,
-        string $fechaInicio,
-        string $fechaFin,
-        ?int   $excluirBloque = null,
-        ?int   $excluirFicha  = null
+    public function detectarConflictos(int $idFuncionario,int $idAmbiente,string $horaInicio,string $horaFin,array  $dias,string $fechaInicio,string $fechaFin,?int   $excluirBloque = null,?int   $excluirFicha  = null
     ): array {
         return [
             'instructor' => $this->detectarConflictoInstructor(

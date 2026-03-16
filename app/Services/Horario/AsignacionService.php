@@ -193,7 +193,60 @@ class AsignacionService
             ->where('idFuncionario', $idFuncionario)
             ->get();
 
-        return ['clases' => $asignaciones->values()->all()];
+        return [
+            'clases' => $asignaciones->values()->all(),
+            'grilla' => $this->construirGrillaInstructor($asignaciones),
+        ];
+    }
+
+    public function construirGrillaInstructor($asignaciones): array
+    {
+        $slots = [];
+        for ($h = 6; $h < 24; $h += 2)
+            $slots[] = sprintf('%02d:00', $h) . ' - ' . sprintf('%02d:00', $h + 2);
+
+        $grilla = array_fill_keys($slots, []);
+
+        foreach ($asignaciones as $asig) {
+            $bloque = $asig->bloque;
+            if (!$bloque) continue;
+
+            $horaIni = $bloque->horaInicio ?? null;
+            $horaFin = $bloque->horaFin    ?? null;
+            if (!$horaIni || !$horaFin) continue;
+
+            $bloqueInicio = strtotime($horaIni);
+            $bloqueFin    = strtotime($horaFin);
+            $fechaIni     = $bloque->fechaInicio ?? null;
+            $fechaFin     = $bloque->fechaFin    ?? null;
+
+            foreach ($slots as $slot) {
+                [$desde, $hasta] = explode(' - ', $slot);
+                if (!($bloqueInicio < strtotime($hasta) && $bloqueFin > strtotime($desde))) continue;
+
+                foreach ($bloque->dias as $dia) {
+                    $nombreDia = $dia->nombreDia ?? $dia->nombre ?? null;
+                    if (!$nombreDia || isset($grilla[$slot][$nombreDia])) continue;
+
+                    $grilla[$slot][$nombreDia] = [
+                        'ficha'          => $asig->ficha
+                                               ? ('Ficha ' . ($asig->ficha->codigoFicha ?? ''))
+                                               : '—',
+                        'programa'       => $asig->ficha?->programa?->nombre ?? '—',
+                        'ambiente'       => $asig->ambiente
+                                               ? $asig->ambiente->codigo
+                                               : 'Virtual',
+                        'modalidad'      => $asig->modalidad,
+                        'fechaInicio'    => $fechaIni,
+                        'fechaFin'       => $fechaFin,
+                        'idBloque'       => $bloque->idBloque,
+                        'idAsignacion'   => $asig->idAsignacion,
+                    ];
+                }
+            }
+        }
+
+        return $grilla;
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -228,7 +281,7 @@ class AsignacionService
                 if (!($bloqueInicio < strtotime($hasta) && $bloqueFin > strtotime($desde))) continue;
 
                 foreach ($bloque->dias as $dia) {
-                    $nombreDia = $dia->nombreDia ?? $dia->nombre ?? $dia->nombredia ?? null;
+                    $nombreDia = $dia->nombreDia ?? $dia->nombre ?? null;
                     if (!$nombreDia || isset($grilla[$slot][$nombreDia])) continue;
 
                     $grilla[$slot][$nombreDia] = [
