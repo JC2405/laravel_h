@@ -36,8 +36,8 @@ class AsignacionService
      * El frontend puede enviar "idFuncionario" o "id_funcionario" —
      * esta función unifica ambas variantes en un solo array con nombres claros.
      *
-     * @param  array $datosOriginales  Datos crudos que llegan del request
-     * @return array                   Datos normalizados con claves consistentes
+     *  $datosOriginales  Datos crudos que llegan del request
+     *                    Datos normalizados con claves consistentes
      */
     private function normalizarDatosEntrada(array $datosOriginales): array
     {
@@ -302,9 +302,9 @@ class AsignacionService
      *    en cascada: día → bloque → asignación.
      *    → Respuesta: accion = 'ASIGNACION_ELIMINADA'
      *
-     * @param  int   $idBloque  ID del bloque horario (tabla "bloque")
-     * @param  int   $idDia     ID del día a eliminar (tabla "dia")
-     * @return array
+     *  $idBloque  ID del bloque horario (tabla "bloque")
+     *  $idDia     ID del día a eliminar (tabla "dia")
+     * 
      */
     public function eliminarDiaDeBloque(int $idBloque, int $idDia): array
     {
@@ -591,15 +591,11 @@ class AsignacionService
      *   franja = "08:00 - 10:00", bloque = 07:00 a 09:00
      *   → 07:00 < 10:00  AND  09:00 > 08:00  → true (se solapa)
      *
-     * @param  string $franja           Formato "HH:MM - HH:MM"
-     * @param  string $horaInicioBloque Hora de inicio del bloque (ej. "07:00:00")
-     * @param  string $horaFinBloque    Hora de fin del bloque    (ej. "09:00:00")
-     * @return bool
+     * $franja           Formato "HH:MM - HH:MM"
+     * $horaInicioBloque Hora de inicio del bloque (ej. "07:00:00")
+     * $horaFinBloque    Hora de fin del bloque    (ej. "09:00:00")
      */
-    private function bloqueSeSOlapaConFranja(
-        string $franja,
-        string $horaInicioBloque,
-        string $horaFinBloque
+    private function bloqueSeSOlapaConFranja(string $franja,string $horaInicioBloque,string $horaFinBloque
     ): bool {
         [$horaInicioDeFranja, $horaFinDeFranja] = explode(' - ', $franja);
 
@@ -618,10 +614,10 @@ class AsignacionService
      * Centralizar esto evita repetir el mismo array en cada return del service
      * y garantiza que todos los errores tengan siempre las mismas claves.
      *
-     * @param  string $codigo   Código legible por el frontend (ej. 'CONFLICTO', 'NO_ENCONTRADO')
-     * @param  string $mensaje  Mensaje en español para mostrar al usuario
-     * @param  int    $http     Código HTTP sugerido (por defecto 422 = Unprocessable)
-     * @return array
+     *  $codigo   Código legible por el frontend (ej. 'CONFLICTO', 'NO_ENCONTRADO')
+     *  $mensaje  Mensaje en español para mostrar al usuario
+     *  $http     Código HTTP sugerido (por defecto 422 = Unprocessable)
+     *
      */
     private function respuestaError(string $codigo, string $mensaje, int $http = 422): array
     {

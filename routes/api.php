@@ -7,6 +7,7 @@ use App\Http\Controllers\AuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DiaController;
+use App\Http\Controllers\ExcelController;
 use App\Http\Controllers\FichaController;
 use App\Http\Controllers\FuncionarioController;
 use App\Http\Controllers\HorarioController;
@@ -105,4 +106,14 @@ Route::delete('eliminarAsignacion/{idAsignacion}',[HorarioController::class, 'de
 Route::delete('eliminarDiaDeBloque/{idBloque}/{idDia}', [HorarioController::class, 'destroyDiaDeBloque']);
 
 
-Route::get('horarioPorInstructor/{idFuncionario}',[HorarioController::class,'listarFuncionarioPorHorario']);        
+Route::get('horarioPorInstructor/{idFuncionario}',[HorarioController::class,'listarFuncionarioPorHorario']); 
+
+Route::get('exportar/funcionarios',                [ExcelController::class, 'exportarFuncionarios']);
+Route::get('exportar/fichas',                      [ExcelController::class, 'exportarFichas']);
+Route::get('exportar/aprendices',                  [ExcelController::class, 'exportarAprendices']);
+Route::get('exportar/aprendices/{idFicha}',        [ExcelController::class, 'exportarAprendicesDeFicha']);
+Route::get('exportar/programas',                   [ExcelController::class, 'exportarProgramas']);
+ 
+// ── Imports — el frontend hace POST con multipart/form-data ───────────────────
+Route::post('importar/funcionarios',               [ExcelController::class, 'importarFuncionarios']);
+Route::post('importar/aprendices',                 [ExcelController::class, 'importarAprendices']);

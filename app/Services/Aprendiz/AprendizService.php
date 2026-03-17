@@ -9,12 +9,17 @@ class AprendizService
 {
     public function getAll():LengthAwarePaginator
     {
-        return AprendizModel::orderBy('idAprendiz')->paginate(AprendizModel::PAGINATION);
+        return AprendizModel::with('ficha')->orderBy('idAprendiz')->paginate(AprendizModel::PAGINATION);
     }
 
-    public function store(array $data):AprendizModel
+    public function store(array $data, string $documento):AprendizModel
     {
-        return AprendizModel::create($data);
+        $data['password'] = $documento;
+
+        $aprendiz = AprendizModel::create($data);
+        
+
+        return $aprendiz ;
     }
 
     public function update(AprendizModel $aprendizModel, $data):AprendizModel
