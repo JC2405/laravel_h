@@ -4,6 +4,7 @@ use App\Http\Controllers\AmbienteController;
 use App\Http\Controllers\AprendizController;
 use App\Http\Controllers\AreaController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CompetenciaController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DiaController;
@@ -117,3 +118,17 @@ Route::get('exportar/programas',                   [ExcelController::class, 'exp
 // ── Imports — el frontend hace POST con multipart/form-data ───────────────────
 Route::post('importar/funcionarios',               [ExcelController::class, 'importarFuncionarios']);
 Route::post('importar/aprendices',                 [ExcelController::class, 'importarAprendices']);
+
+
+
+Route::get('listarCompetencia', [CompetenciaController::class, 'index']);
+Route::post('crearCompetencia', [CompetenciaController::class, 'store']);
+Route::get('verCompetencia/{idCompetencia}', [CompetenciaController::class, 'show']);
+Route::put('editarCompetencia/{idCompetencia}', [CompetenciaController::class, 'update']);
+Route::delete('eliminarCompetencia/{idCompetencia}', [CompetenciaController::class, 'destroy']);
+
+
+
+// Competencias
+Route::get('exportar/competencias',  [ExcelController::class, 'exportarCompetencias']);
+Route::post('importar/competencias', [ExcelController::class, 'importarCompetencias']);

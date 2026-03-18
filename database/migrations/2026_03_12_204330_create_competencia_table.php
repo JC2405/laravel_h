@@ -13,11 +13,9 @@ return new class extends Migration
     {
         Schema::create('competencia', function (Blueprint $table) {
             $table->unsignedInteger('idCompetencia')->autoIncrement();
-            $table->string('nombre', 200);
+            $table->string('nombreCompetencia', 200);
             $table->string('codigo', 40)->unique('uqCompetenciaCodigo');
             $table->string('tipo', 50);
-            $table->integer('horas')->nullable();
-            
         });
     }
 

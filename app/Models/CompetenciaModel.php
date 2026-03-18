@@ -8,13 +8,11 @@ class CompetenciaModel extends Model
     protected $primaryKey = 'idCompetencia';
     public    $timestamps = false;
 
-    protected $fillable = [  'nombre',   'codigo',  'tipo', 'horas'  , 'estado', 'idPrograma', ];
+    protected $fillable = [  'nombreCompetencia','codigo','tipo' ];
 
     public const PAGINATION = 10;
 
-    public function programa() {
-        return $this->belongsTo(ProgramaModel::class, 'idPrograma', 'idPrograma');
-    }
+
     
     
 }
