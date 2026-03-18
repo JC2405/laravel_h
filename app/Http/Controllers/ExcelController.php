@@ -10,6 +10,7 @@ use App\Exports\ProgramasExport;
 use App\Imports\AprendicesImport;
 use App\Imports\CompetenciaImport;
 use App\Imports\FuncionariosImport;
+use App\Imports\ResultadoImport;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -207,5 +208,52 @@ class ExcelController extends Controller
         }
 
         return response()->json($respuesta, 200);
+    }
+
+
+    public function exportarResultados()
+    {
+        $nombreArchivo = 'resultados_' . now()->format('Y-m-d') . '.xlsx';
+        return Excel::download(new CompetenciaExport, $nombreArchivo);
+    }
+
+    public function importarResultados(Request $request)
+{
+    // Validación del archivo
+    $request->validate([
+        'archivo' => 'required|file|mimes:xlsx,xls,csv|max:5120',
+    ], [
+        'archivo.required' => 'Debes subir un archivo.',
+        'archivo.mimes'    => 'El archivo debe ser Excel (.xlsx, .xls) o CSV.',
+        'archivo.max'      => 'El archivo no puede superar los 5MB.',
+    ]);
+
+    // Crear importador
+    $importador = new ResultadoImport();
+
+    // Importar archivo
+    Excel::import($importador, $request->file('archivo'));
+
+    // Obtener errores y filas importadas
+    $erroresDeFila = $importador->failures();
+
+    $respuesta = [
+        'message'     => 'Importación completada.',
+        'importados'  => $importador->getTotalImportadas(),
+        'con_errores' => count($erroresDeFila),
+    ];
+
+    if (count($erroresDeFila) > 0) {
+        $respuesta['errores'] = collect($erroresDeFila)->map(function ($errorDeFila) {
+            return [
+                'fila'    => $errorDeFila->row(),
+                'columna' => $errorDeFila->attribute(),
+                'valor'   => $errorDeFila->values()[$errorDeFila->attribute()] ?? null,
+                'errores' => $errorDeFila->errors(),
+            ];
+        })->values()->all();
+    }
+
+    return response()->json($respuesta, 200);
     }
 }

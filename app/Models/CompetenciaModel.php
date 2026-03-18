@@ -12,7 +12,10 @@ class CompetenciaModel extends Model
 
     public const PAGINATION = 10;
 
-
+    public function resultados()
+    {
+        return $this->hasMany(ResultadoModel::class, 'idCompetencia', 'idCompetencia');
+    }
     
     
 }

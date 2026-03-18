@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Requests\Competencia;
+namespace App\Http\Requests\Resultado;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class CreateCompetenciaRequest extends FormRequest
+class UpdateResultadoRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,9 +22,9 @@ class CreateCompetenciaRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nombreCompetencia' => 'required|string|max:255',
-            'codigo' => 'required|string|max:255',
-            'tipo' => 'required|string|max:255',
+            'nombre'=>'required|string|max:255',
+            'codigo'=>'required|string|max:40',
+            'idCompetencia'=>'required|integer',
         ];
     }
 }

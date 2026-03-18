@@ -14,6 +14,7 @@ use App\Http\Controllers\FuncionarioController;
 use App\Http\Controllers\HorarioController;
 use App\Http\Controllers\MunicipioController;
 use App\Http\Controllers\ProgramaController;
+use App\Http\Controllers\ResultadoController;
 use App\Http\Controllers\SedeController;
 use App\Http\Controllers\TipoContratoController;
 use App\Http\Controllers\TipoFormacionController;
@@ -120,15 +121,23 @@ Route::post('importar/funcionarios',               [ExcelController::class, 'imp
 Route::post('importar/aprendices',                 [ExcelController::class, 'importarAprendices']);
 
 
-
+// Competencias
 Route::get('listarCompetencia', [CompetenciaController::class, 'index']);
 Route::post('crearCompetencia', [CompetenciaController::class, 'store']);
 Route::get('verCompetencia/{idCompetencia}', [CompetenciaController::class, 'show']);
 Route::put('editarCompetencia/{idCompetencia}', [CompetenciaController::class, 'update']);
 Route::delete('eliminarCompetencia/{idCompetencia}', [CompetenciaController::class, 'destroy']);
-
-
-
-// Competencias
 Route::get('exportar/competencias',  [ExcelController::class, 'exportarCompetencias']);
 Route::post('importar/competencias', [ExcelController::class, 'importarCompetencias']);
+
+
+
+// Resultados 
+
+Route::get('listarResultado',[ResultadoController::class,'index']);
+Route::post('crearResultado',[ResultadoController::class,'store']);
+Route::get('obtenerResultadoXId/{idResultado}',[ResultadoController::class,'show']);
+Route::put('editarResultado/{idResultado}',[ResultadoController::class,'update']);
+Route::delete(' /{idResultado}',[ResultadoController::class,'destroy']);
+Route::get('exportar/resultados', [ExcelController::class, 'exportarResultados']);
+Route::post('importar/resultados', [ExcelController::class, 'importarResultados']);

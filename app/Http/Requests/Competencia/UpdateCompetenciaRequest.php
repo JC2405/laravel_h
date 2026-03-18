@@ -23,7 +23,8 @@ class UpdateCompetenciaRequest extends FormRequest
     {
         return [
             'nombreCompetencia' => 'required|string|max:255',
-            'codigo' => 'required|string|max:255'
+            'codigo' => 'required|string|max:255',
+            'tipo' => 'required|string|max:255',
         ];
     }
 }
