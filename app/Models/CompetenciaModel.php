@@ -8,14 +8,16 @@ class CompetenciaModel extends Model
     protected $primaryKey = 'idCompetencia';
     public    $timestamps = false;
 
-    protected $fillable = [  'nombreCompetencia','codigo','tipo' ];
+    protected $fillable = [  'nombreCompetencia','codigo','tipo' , 'idTipoFormacion' ];
 
     public const PAGINATION = 10;
 
-    public function resultados()
-    {
-        return $this->hasMany(ResultadoModel::class, 'idCompetencia', 'idCompetencia');
-    }
+   
     
+    public function tipoFormacion()
+    {
+        return $this->belongsTo(TipoFormacionModel::class, 'idTipoFormacion', 'idTipoFormacion');
+    }
+
     
 }

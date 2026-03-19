@@ -13,6 +13,7 @@ use App\Imports\FuncionariosImport;
 use App\Imports\ResultadoImport;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Services\Juicios\JuiciosEvaluativosService;
 
 /**
  * ExcelController
@@ -255,5 +256,61 @@ class ExcelController extends Controller
     }
 
     return response()->json($respuesta, 200);
+    }
+
+
+
+    /**
+ * POST /api/analizar/juicios
+ *
+ * Recibe el reporte de juicios evaluativos del SENA,
+ * lo analiza EN MEMORIA y retorna el JSON con el resultado.
+ *
+ * El archivo NUNCA se guarda — se lee, se procesa y se descarta.
+ *
+ * Body (multipart/form-data):
+ *   archivo: [ReporteJuiciosEvaluativos.xlsx]
+ *
+ * Respuesta exitosa:
+ * {
+ *   "metadata": { "Ficha de Caracterización": "3171062", ... },
+ *   "total_aprendices": 29,
+ *   "umbral_usado": 80,
+ *   "resumen": {
+ *     "competencias_necesitan_horario": 3,
+ *     "competencias_cubiertas": 2
+ *   },
+ *   "competencias": [
+ *     {
+ *       "codigo": "36180",
+ *       "nombre_completo": "36180 - Enrique Low Murtra...",
+ *       "necesita_horario": false,
+ *       "estado": "CUBIERTO",
+ *       "resultados": [ ... ]
+ *     }
+ *   ]
+ * }
+ */
+public function analizarJuicios(Request $request)
+{
+    $request->validate([
+        'archivo' => 'required|file|mimes:xlsx,xls|max:10240',
+    ], [
+        'archivo.required' => 'Debes subir el reporte de juicios evaluativos.',
+        'archivo.mimes'    => 'El archivo debe ser Excel (.xlsx o .xls).',
+        'archivo.max'      => 'El archivo no puede superar los 10MB.',
+    ]);
+
+    try {
+        $service   = new JuiciosEvaluativosService();
+        $resultado = $service->analizar($request->file('archivo'));
+
+        return response()->json($resultado, 200);
+
+    } catch (\Throwable $e) {
+        return response()->json([
+            'message' => 'Error al procesar el archivo: ' . $e->getMessage(),
+        ], 422);
+    }
     }
 }

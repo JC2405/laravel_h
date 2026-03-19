@@ -141,3 +141,6 @@ Route::put('editarResultado/{idResultado}',[ResultadoController::class,'update']
 Route::delete(' /{idResultado}',[ResultadoController::class,'destroy']);
 Route::get('exportar/resultados', [ExcelController::class, 'exportarResultados']);
 Route::post('importar/resultados', [ExcelController::class, 'importarResultados']);
+
+//Juicios evaluativos
+Route::post('analizar/juicios', [ExcelController::class, 'analizarJuicios']);

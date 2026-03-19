@@ -16,4 +16,9 @@ class TipoFormacionModel extends Model
     public function programas() {
         return $this->hasMany(ProgramaModel::class, 'idTipoFormacion', 'idTipoFormacion');
     }
+
+    public function competencias()
+    {
+        return $this->hasMany(CompetenciaModel::class, 'idTipoFormacion', 'idTipoFormacion');
+    }
 }

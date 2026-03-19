@@ -16,6 +16,11 @@ return new class extends Migration
             $table->string('nombreCompetencia', 200);
             $table->string('codigo', 40)->unique('uqCompetenciaCodigo');
             $table->string('tipo', 50);
+            $table->unsignedInteger('idTipoFormacion');
+
+            $table->foreign('idTipoFormacion', 'fkCompetenciaTipoFormacion')
+            ->references('idTipoFormacion')->on('tipoFormacion')
+            ->onUpdate('cascade');
         });
     }
 
