@@ -14,6 +14,7 @@ use App\Http\Controllers\FuncionarioController;
 use App\Http\Controllers\HorarioController;
 use App\Http\Controllers\MunicipioController;
 use App\Http\Controllers\ProgramaController;
+use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\ResultadoController;
 use App\Http\Controllers\SedeController;
 use App\Http\Controllers\TipoContratoController;
@@ -144,3 +145,11 @@ Route::post('importar/resultados', [ExcelController::class, 'importarResultados'
 
 //Juicios evaluativos
 Route::post('analizar/juicios', [ExcelController::class, 'analizarJuicios']);
+
+
+// ── Reportes de competencias pendientes ──────────────────────
+// POST: recibe Excel + id_ficha, genera el análisis y guarda el .txt
+Route::post('reportes/competencias-pendientes', [ReporteController::class, 'generarReporteCompetencias']);
+ 
+// GET: descarga un .txt ya generado por su nombre de archivo
+Route::get('reportes/descargar/{nombre}', [ReporteController::class, 'descargarReporte']);
