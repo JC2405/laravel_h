@@ -128,7 +128,7 @@ Route::post('crearCompetencia', [CompetenciaController::class, 'store']);
 Route::get('verCompetencia/{idCompetencia}', [CompetenciaController::class, 'show']);
 Route::put('editarCompetencia/{idCompetencia}', [CompetenciaController::class, 'update']);
 Route::delete('eliminarCompetencia/{idCompetencia}', [CompetenciaController::class, 'destroy']);
-Route::get('exportar/competencias',  [ExcelController::class, 'exportarCompetencias']);
+Route::get('exportar/competencias/{idTipoFormacion?}',  [ExcelController::class, 'exportarCompetencias']);
 Route::post('importar/competencias', [ExcelController::class, 'importarCompetencias']);
 
 
@@ -140,7 +140,7 @@ Route::post('crearResultado',[ResultadoController::class,'store']);
 Route::get('obtenerResultadoXId/{idResultado}',[ResultadoController::class,'show']);
 Route::put('editarResultado/{idResultado}',[ResultadoController::class,'update']);
 Route::delete(' /{idResultado}',[ResultadoController::class,'destroy']);
-Route::get('exportar/resultados', [ExcelController::class, 'exportarResultados']);
+Route::get('exportar/resultados/{idTipoFormacion?}', [ExcelController::class, 'exportarResultados']);
 Route::post('importar/resultados', [ExcelController::class, 'importarResultados']);
 
 //Juicios evaluativos

@@ -19,10 +19,19 @@ class ResultadoExport implements
     WithTitle,
     ShouldAutoSize
 {
+    public function __construct(protected ?int $idTipoFormacion = null) {}
+
     public function collection()
     {
-        // Solo trae los resultados y su competencia relacionada
-        return ResultadoModel::with('competencia')->orderBy('idResultado')->get();
+        $query = ResultadoModel::with('competencia');
+
+        if ($this->idTipoFormacion !== null) {
+            $query->whereHas('competencia', function ($q) {
+                $q->where('idTipoFormacion', $this->idTipoFormacion);
+            });
+        }
+
+        return $query->orderBy('idResultado')->get();
     }
 
     public function map($resultado): array

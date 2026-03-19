@@ -24,6 +24,10 @@ class ResultadoImport implements
 
     private int $totalFilasImportadas = 0;
 
+    public function __construct(
+        private ?int $idTipoFormacionFijo = null
+    ) {}
+
     public function collection(Collection $filasDeLaHoja): void
     {
         foreach ($filasDeLaHoja as $fila) {
@@ -39,6 +43,10 @@ class ResultadoImport implements
 
             if (!$competencia) {
                 continue; // Si no existe la competencia, saltamos la fila
+            }
+
+            if ($this->idTipoFormacionFijo !== null && $competencia->idTipoFormacion !== $this->idTipoFormacionFijo) {
+                continue; // Saltar si la competencia no pertenece al tipo de formación indicado
             }
 
             ResultadoModel::updateOrCreate(

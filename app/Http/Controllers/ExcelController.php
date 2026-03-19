@@ -7,6 +7,7 @@ use App\Exports\CompetenciaExport;
 use App\Exports\FichasExport;
 use App\Exports\FuncionariosExport;
 use App\Exports\ProgramasExport;
+use App\Exports\ResultadoExport;
 use App\Imports\AprendicesImport;
 use App\Imports\CompetenciaImport;
 use App\Imports\FuncionariosImport;
@@ -77,11 +78,28 @@ class ExcelController extends Controller
      * Descarga un Excel con todas las competencias del sistema.
      * Columnas: ID | nombreCompetencia | codigo | tipo
      */
-    public function exportarCompetencias()
+    public function exportarCompetencias(Request $request)
     {
-        $nombreArchivo = 'competencias_' . now()->format('Y-m-d') . '.xlsx';
-        return Excel::download(new CompetenciaExport, $nombreArchivo);
+    $idTipoFormacion = $request->query('id_tipo_formacion')
+        ? (int) $request->query('id_tipo_formacion')
+        : null;
+
+    // Validar que el id existe si fue enviado
+    if ($idTipoFormacion !== null) {
+        $request->merge(['id_tipo_formacion' => $idTipoFormacion]);
+        $request->validate([
+            'id_tipo_formacion' => 'integer|exists:tipoFormacion,idTipoFormacion',
+        ], [
+            'id_tipo_formacion.exists' => 'El tipo de formación indicado no existe.',
+        ]);
     }
+
+    $sufijo        = $idTipoFormacion ? "tipo_{$idTipoFormacion}_" : '';
+    $nombreArchivo = "competencias_{$sufijo}" . now()->format('Y-m-d') . '.xlsx';
+
+    return Excel::download(new CompetenciaExport($idTipoFormacion), $nombreArchivo);
+    }
+
 
     // =========================================================================
     //  IMPORTS — Subir Excel
@@ -177,60 +195,87 @@ class ExcelController extends Controller
      * - Las filas con errores de validación se saltan.
      */
     public function importarCompetencias(Request $request)
-    {
-        $request->validate([
-            'archivo' => 'required|file|mimes:xlsx,xls,csv|max:5120',
-        ], [
-            'archivo.required' => 'Debes subir un archivo.',
-            'archivo.mimes'    => 'El archivo debe ser Excel (.xlsx, .xls) o CSV.',
-            'archivo.max'      => 'El archivo no puede superar los 5MB.',
-        ]);
+{
+    $request->validate([
+        'archivo'           => 'required|file|mimes:xlsx,xls,csv|max:5120',
+        'id_tipo_formacion' => 'nullable|integer|exists:tipoFormacion,idTipoFormacion',
+    ], [
+        'archivo.required'          => 'Debes subir un archivo.',
+        'archivo.mimes'             => 'El archivo debe ser Excel (.xlsx, .xls) o CSV.',
+        'archivo.max'               => 'El archivo no puede superar los 5MB.',
+        'id_tipo_formacion.exists'  => 'El tipo de formación indicado no existe.',
+    ]);
 
-        $importador = new CompetenciaImport();
-        Excel::import($importador, $request->file('archivo'));
+    $idTipoFormacion = $request->input('id_tipo_formacion')
+        ? (int) $request->input('id_tipo_formacion')
+        : null;
 
-        $erroresDeFila = $importador->failures();
+    $importador = new CompetenciaImport(idTipoFormacionFijo: $idTipoFormacion);
+    Excel::import($importador, $request->file('archivo'));
 
-        $respuesta = [
-            'message'     => 'Importación completada.',
-            'importados'  => $importador->getTotalImportadas(),
-            'con_errores' => count($erroresDeFila),
-        ];
+    $erroresDeFila = $importador->failures();
 
-        if (count($erroresDeFila) > 0) {
-            $respuesta['errores'] = collect($erroresDeFila)->map(function ($errorDeFila) {
-                return [
-                    'fila'    => $errorDeFila->row(),
-                    'columna' => $errorDeFila->attribute(),
-                    'valor'   => $errorDeFila->values()[$errorDeFila->attribute()] ?? null,
-                    'errores' => $errorDeFila->errors(),
-                ];
-            })->values()->all();
-        }
+    $respuesta = [
+        'message'     => 'Importación completada.',
+        'importados'  => $importador->getTotalImportadas(),
+        'con_errores' => count($erroresDeFila),
+    ];
 
-        return response()->json($respuesta, 200);
+    if (count($erroresDeFila) > 0) {
+        $respuesta['errores'] = collect($erroresDeFila)->map(function ($errorDeFila) {
+            return [
+                'fila'    => $errorDeFila->row(),
+                'columna' => $errorDeFila->attribute(),
+                'valor'   => $errorDeFila->values()[$errorDeFila->attribute()] ?? null,
+                'errores' => $errorDeFila->errors(),
+            ];
+        })->values()->all();
+    }
+
+    return response()->json($respuesta, 200);
     }
 
 
-    public function exportarResultados()
+    public function exportarResultados(Request $request)
     {
-        $nombreArchivo = 'resultados_' . now()->format('Y-m-d') . '.xlsx';
-        return Excel::download(new CompetenciaExport, $nombreArchivo);
+        $idTipoFormacion = $request->query('id_tipo_formacion')
+            ? (int) $request->query('id_tipo_formacion')
+            : null;
+
+        if ($idTipoFormacion !== null) {
+            $request->merge(['id_tipo_formacion' => $idTipoFormacion]);
+            $request->validate([
+                'id_tipo_formacion' => 'integer|exists:tipoFormacion,idTipoFormacion',
+            ], [
+                'id_tipo_formacion.exists' => 'El tipo de formación indicado no existe.',
+            ]);
+        }
+
+        $sufijo = $idTipoFormacion ? "tipo_{$idTipoFormacion}_" : '';
+        $nombreArchivo = "resultados_{$sufijo}" . now()->format('Y-m-d') . '.xlsx';
+
+        return Excel::download(new ResultadoExport($idTipoFormacion), $nombreArchivo);
     }
 
     public function importarResultados(Request $request)
-{
-    // Validación del archivo
-    $request->validate([
-        'archivo' => 'required|file|mimes:xlsx,xls,csv|max:5120',
-    ], [
-        'archivo.required' => 'Debes subir un archivo.',
-        'archivo.mimes'    => 'El archivo debe ser Excel (.xlsx, .xls) o CSV.',
-        'archivo.max'      => 'El archivo no puede superar los 5MB.',
-    ]);
+    {
+        // Validación del archivo
+        $request->validate([
+            'archivo'           => 'required|file|mimes:xlsx,xls,csv|max:5120',
+            'id_tipo_formacion' => 'nullable|integer|exists:tipoFormacion,idTipoFormacion',
+        ], [
+            'archivo.required'          => 'Debes subir un archivo.',
+            'archivo.mimes'             => 'El archivo debe ser Excel (.xlsx, .xls) o CSV.',
+            'archivo.max'               => 'El archivo no puede superar los 5MB.',
+            'id_tipo_formacion.exists'  => 'El tipo de formación indicado no existe.',
+        ]);
 
-    // Crear importador
-    $importador = new ResultadoImport();
+        $idTipoFormacion = $request->input('id_tipo_formacion')
+            ? (int) $request->input('id_tipo_formacion')
+            : null;
+
+        // Crear importador
+        $importador = new ResultadoImport(idTipoFormacionFijo: $idTipoFormacion);
 
     // Importar archivo
     Excel::import($importador, $request->file('archivo'));
@@ -312,5 +357,5 @@ public function analizarJuicios(Request $request)
             'message' => 'Error al procesar el archivo: ' . $e->getMessage(),
         ], 422);
     }
-    }
+}
 }

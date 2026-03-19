@@ -12,12 +12,18 @@ use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 /**
- * CompetenciasExport
+ * CompetenciaExport
  *
- * Exporta todas las competencias a Excel.
+ * Exporta competencias a Excel.
  *
- * Uso:
- *   return Excel::download(new CompetenciasExport, 'competencias.xlsx');
+ * Uso sin filtro (todas):
+ *   Excel::download(new CompetenciaExport(), 'competencias.xlsx');
+ *
+ * Uso con filtro por tipo de formación:
+ *   Excel::download(new CompetenciaExport($idTipoFormacion), 'competencias_tecnologo.xlsx');
+ *
+ * Columnas exportadas (listas para reimportar):
+ *   nombreCompetencia | codigo | tipo | nombreTipoFormacion
  */
 class CompetenciaExport implements
     FromCollection,
@@ -27,26 +33,42 @@ class CompetenciaExport implements
     WithTitle,
     ShouldAutoSize
 {
+    /**
+     * @param  int|null $idTipoFormacionFiltro
+     *   null  → exporta todas las competencias
+     *   int   → exporta solo las de ese tipo de formación
+     */
+    public function __construct(
+        private ?int $idTipoFormacionFiltro = null
+    ) {}
+
     // =========================================================================
     //  DATOS
     // =========================================================================
 
     public function collection()
     {
-        return CompetenciaModel::orderBy('nombreCompetencia')->get();
+        $consulta = CompetenciaModel::with('tipoFormacion')
+            ->orderBy('nombreCompetencia');
+
+        if ($this->idTipoFormacionFiltro !== null) {
+            $consulta->where('idTipoFormacion', $this->idTipoFormacionFiltro);
+        }
+
+        return $consulta->get();
     }
 
     // =========================================================================
-    //  ENCABEZADOS
+    //  ENCABEZADOS  (mismo nombre que espera el importador)
     // =========================================================================
 
     public function headings(): array
     {
         return [
-            'ID',
             'nombreCompetencia',
             'codigo',
             'tipo',
+            'nombreTipoFormacion',   // ← columna nueva para el import
         ];
     }
 
@@ -57,10 +79,10 @@ class CompetenciaExport implements
     public function map($competencia): array
     {
         return [
-            $competencia->idCompetencia,
             $competencia->nombreCompetencia,
             $competencia->codigo,
             $competencia->tipo,
+            $competencia->tipoFormacion?->nombreTipoFormacion ?? '',
         ];
     }
 
@@ -87,7 +109,7 @@ class CompetenciaExport implements
                 ],
                 'fill' => [
                     'fillType'   => 'solid',
-                    'startColor' => ['argb' => 'FF39A900'], // verde SENA
+                    'startColor' => ['argb' => 'FF39A900'],
                 ],
             ],
         ];
