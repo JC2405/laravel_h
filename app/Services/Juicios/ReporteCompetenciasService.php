@@ -348,29 +348,6 @@ class ReporteCompetenciasService
         return $resumen;
     }
 
-    // =========================================================================
-    //  CÁLCULOS AUXILIARES
-    // =========================================================================
-
-    /**
-     * Calcula el porcentaje MÍNIMO entre todos los resultados del Excel
-     * para una competencia.
-     *
-     * Se mantiene por compatibilidad, pero el método principal ahora es
-     * calcularPorcentajeMinimoConBD() que también considera los sin_datos.
-     *
-     * @deprecated Usar calcularPorcentajeMinimoConBD() en su lugar
-     */
-    private function calcularPorcentajeMinimoDeResultados(array $resultados): float
-    {
-        if (empty($resultados)) {
-            return 0.0;
-        }
-
-        $porcentajes = array_column($resultados, 'porcentaje_aprobacion');
-
-        return empty($porcentajes) ? 0.0 : (float) min($porcentajes);
-    }
 
     // =========================================================================
     //  GENERACIÓN DEL ARCHIVO .TXT

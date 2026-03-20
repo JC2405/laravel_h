@@ -12,12 +12,13 @@ class CompetenciaModel extends Model
 
     public const PAGINATION = 10;
 
-   
-    
     public function tipoFormacion()
     {
         return $this->belongsTo(TipoFormacionModel::class, 'idTipoFormacion', 'idTipoFormacion');
     }
 
-    
+    public function resultados()
+    {
+        return $this->hasMany(ResultadoModel::class, 'idCompetencia', 'idCompetencia');
+    }
 }

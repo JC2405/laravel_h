@@ -143,13 +143,14 @@ Route::delete(' /{idResultado}',[ResultadoController::class,'destroy']);
 Route::get('exportar/resultados/{idTipoFormacion?}', [ExcelController::class, 'exportarResultados']);
 Route::post('importar/resultados', [ExcelController::class, 'importarResultados']);
 
-//Juicios evaluativos
-Route::post('analizar/juicios', [ExcelController::class, 'analizarJuicios']);
+// ── Juicios evaluativos ──────────────────────────────────────────────────────
 
+// Análisis rápido (solo Excel, sin BD) — usado por HorarioTitulada (Transversales)
+Route::post('analizar/juicios',                  [ReporteController::class, 'analizarJuicios']);
 
-// ── Reportes de competencias pendientes ──────────────────────
-// POST: recibe Excel + id_ficha, genera el análisis y guarda el .txt
-Route::post('reportes/competencias-pendientes', [ReporteController::class, 'generarReporteCompetencias']);
- 
-// GET: descarga un .txt ya generado por su nombre de archivo
-Route::get('reportes/descargar/{nombre}', [ReporteController::class, 'descargarReporte']);
+// Análisis completo (Excel + BD: competencias y resultados) — usado por HorarioFormativa
+Route::post('reportes/competencias-pendientes',  [ReporteController::class, 'generarReporteCompetencias']);
+
+// Descarga un .txt de reporte ya generado
+Route::get('reportes/descargar/{nombre}',        [ReporteController::class, 'descargarReporte']);
+

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\Juicios\JuiciosEvaluativosService;
 use App\Services\Juicios\ReporteCompetenciasService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -9,33 +10,82 @@ use Illuminate\Support\Facades\Storage;
 /**
  * ReporteController
  *
- * Expone los endpoints relacionados con la generación de reportes
- * de competencias pendientes de evaluación.
+ * Centraliza todos los endpoints de análisis de juicios evaluativos.
  *
- * RUTAS a agregar en api.php:
+ * RUTAS en api.php:
  *
- *   // Genera el reporte y lo guarda en storage
+ *   // Análisis rápido — solo lee el Excel, sin consultar BD
+ *   // Lo usa HorarioTitulada para verificar Transversales
+ *   Route::post('analizar/juicios', [ReporteController::class, 'analizarJuicios']);
+ *
+ *   // Análisis completo — cruza Excel con competencias y resultados de BD
+ *   // Lo usa HorarioFormativa para ver qué competencias están pendientes
  *   Route::post('reportes/competencias-pendientes', [ReporteController::class, 'generarReporteCompetencias']);
  *
- *   // Descarga un reporte ya generado por su nombre de archivo
+ *   // Descarga un reporte .txt ya generado
  *   Route::get('reportes/descargar/{nombre}', [ReporteController::class, 'descargarReporte']);
  */
 class ReporteController extends Controller
 {
     public function __construct(
-        protected ReporteCompetenciasService $service
+        protected ReporteCompetenciasService $reporteService,
+        protected JuiciosEvaluativosService  $juiciosService
     ) {}
 
     // =========================================================================
-    //  GENERAR REPORTE
+    //  ANÁLISIS RÁPIDO — Solo Excel, sin BD
+    //  Usado por HorarioTitulada (Transversales)
+    // =========================================================================
+
+    /**
+     * POST /api/analizar/juicios
+     *
+     * Lee el Excel de juicios evaluativos y calcula porcentajes de aprobación
+     * por resultado, SIN cruzar con la BD.
+     *
+     * Úsalo cuando NO necesitas comparar contra competencias registradas en BD,
+     * por ejemplo para el análisis rápido de Transversales en HorarioTitulada.
+     *
+     * Body (multipart/form-data):
+     *   archivo: [ReporteJuiciosEvaluativos.xlsx]
+     */
+    public function analizarJuicios(Request $request)
+    {
+        $request->validate([
+            'archivo' => 'required|file|mimes:xlsx,xls|max:10240',
+        ], [
+            'archivo.required' => 'Debes subir el reporte de juicios evaluativos.',
+            'archivo.mimes'    => 'El archivo debe ser Excel (.xlsx o .xls).',
+            'archivo.max'      => 'El archivo no puede superar los 10MB.',
+        ]);
+
+        try {
+            $resultado = $this->juiciosService->analizar($request->file('archivo'));
+            return response()->json($resultado, 200);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'message' => 'Error al procesar el archivo: ' . $e->getMessage(),
+            ], 422);
+        }
+    }
+
+    // =========================================================================
+    //  ANÁLISIS COMPLETO — Excel + BD (competencias y resultados)
+    //  Usado por HorarioFormativa
     // =========================================================================
 
     /**
      * POST /api/reportes/competencias-pendientes
      *
      * Recibe el Excel de juicios evaluativos y el ID de ficha,
-     * cruza con las competencias de BD, genera el análisis y
-     * guarda el archivo .txt en storage.
+     * cruza con las competencias y resultados de BD para el tipoFormacion
+     * del programa de esa ficha, y retorna qué competencias están pendientes.
+     *
+     * Flujo:
+     *   ficha → programa → tipoFormacion
+     *   → competencias de BD con ese tipoFormacion (+ sus resultados)
+     *   → cruce Excel vs BD → pendientes / cubiertas
+     *   → genera archivo .txt en storage
      *
      * Body (multipart/form-data):
      *   archivo:   [ReporteJuiciosEvaluativos.xlsx]
@@ -44,7 +94,6 @@ class ReporteController extends Controller
      * Respuesta exitosa (200):
      * {
      *   "ok": true,
-     *   "path_txt": "reportes/reporte_ficha_3171062_5_20260319_143000.txt",
      *   "ficha": "3171062",
      *   "programa": "Análisis y Desarrollo de Software",
      *   "tipo_formacion": "Tecnólogo",
@@ -59,7 +108,6 @@ class ReporteController extends Controller
      */
     public function generarReporteCompetencias(Request $request)
     {
-        // ── Validación de la petición ─────────────────────────────────────────
         $request->validate([
             'archivo'  => 'required|file|mimes:xlsx,xls|max:10240',
             'id_ficha' => 'required|integer|exists:ficha,idFicha',
@@ -72,12 +120,12 @@ class ReporteController extends Controller
         ]);
 
         try {
-            $resultado = $this->service->generarReporte(
-                archivo:  $request->file('archivo'),
-                idFicha:  (int) $request->input('id_ficha')
+            $resultado = $this->reporteService->generarReporte(
+                archivo: $request->file('archivo'),
+                idFicha: (int) $request->input('id_ficha')
             );
 
-            // Si el service retornó un error de negocio
+            // El service retorna ['ok' => false, 'mensaje' => '...'] si hay error de negocio
             if (!$resultado['ok']) {
                 return response()->json([
                     'message' => $resultado['mensaje'],
@@ -100,20 +148,18 @@ class ReporteController extends Controller
     /**
      * GET /api/reportes/descargar/{nombre}
      *
-     * Descarga un archivo .txt de reporte previamente generado.
+     * Descarga un archivo .txt de reporte previamente generado por
+     * generarReporteCompetencias().
      *
-     * El parámetro {nombre} es el nombre del archivo retornado en path_txt,
-     * pero solo la parte del nombre (sin el prefijo "reportes/").
+     * El parámetro {nombre} es solo el nombre del archivo (sin el prefijo
+     * "reportes/") retornado en el campo path_txt de la respuesta anterior.
      *
      * Ejemplo:
      *   GET /api/reportes/descargar/reporte_ficha_3171062_5_20260319_143000.txt
-     *
-     * Respuesta: descarga del archivo .txt con headers apropiados.
      */
     public function descargarReporte(string $nombre)
     {
-        // Sanitizar el nombre para evitar path traversal
-        // Solo permitimos caracteres seguros: letras, números, guiones, puntos
+        // Sanitizar para evitar path traversal — solo caracteres seguros
         $nombreLimpio = basename($nombre);
 
         if (!preg_match('/^[a-zA-Z0-9_\-\.]+\.txt$/', $nombreLimpio)) {
