@@ -12,6 +12,11 @@ class AmbienteService
         return AmbienteModel::with(['sede', 'area'])->orderBy('idAmbiente')->paginate(AmbienteModel::PAGINATION);
     }
 
+    public function ambientesVacios():
+    {
+        $consulta = 
+    }
+
 
     public function create(array $data):AmbienteModel
     {

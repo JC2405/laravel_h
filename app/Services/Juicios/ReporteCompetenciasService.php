@@ -178,8 +178,8 @@ class ReporteCompetenciasService
      * Resultado:
      *   ['593150' => ['codigo' => '593150', 'porcentaje_aprobacion' => 72.4, ...]]
      *
-     * @param  array $resultadosDelExcel  Array de resultados como viene del JuiciosService
-     * @return array                      Indexado por código extraído
+     *  $resultadosDelExcel  Array de resultados como viene del JuiciosService
+     *                       Indexado por código extraído
      */
     private function indexarResultadosDelExcel(array $resultadosDelExcel): array
     {
@@ -212,13 +212,13 @@ class ReporteCompetenciasService
      *  'pendiente' → existe en el Excel Y el porcentaje <  umbral
      *  'sin_datos' → NO existe en el Excel (el instructor nunca registró juicio)
      *
-     * @param  \Illuminate\Database\Eloquent\Collection $resultadosDeBD
+     *  $resultadosDeBD
      *         Relación eager-loaded de ResultadoModel desde la BD
-     * @param  array $indiceExcel
+     * $indiceExcel
      *         Resultado de indexarResultadosDelExcel()
-     * @param  int   $totalAprendices
+     *    $totalAprendices
      *         Total de aprendices únicos del reporte (para porcentaje relativo)
-     * @return array  Lista de resultados enriquecidos lista para JSON
+     *   Lista de resultados enriquecidos lista para JSON
      */
     private function cruzarResultadosDeBD(
         $resultadosDeBD,
