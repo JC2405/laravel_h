@@ -8,7 +8,7 @@ class ProgramaService
 {
     public function getAll():Collection
     {
-        return ProgramaModel::orderBy('idPrograma')->get();
+        return ProgramaModel::with('tipoFormacion')->orderBy('idPrograma')->get();
     }
 
     public function create(array $data):ProgramaModel
