@@ -22,6 +22,15 @@ use App\Http\Controllers\TipoFormacionController;
 
 Route::post('login', [AuthController::class, 'login']);
 
+// Dashboard Metrics Endpoints
+Route::get('dashboard/fichas/activas', [FichaController::class, 'countActivas']);
+Route::get('dashboard/instructores/count', [FuncionarioController::class, 'countInstructores']);
+Route::get('dashboard/aprendices/matriculados', [AprendizController::class, 'countMatriculados']);
+Route::get('dashboard/aprendices/programa', [AprendizController::class, 'countByPrograma']);
+Route::get('dashboard/ambientes/libres', [AmbienteController::class, 'countLibres']);
+Route::get('dashboard/ambientes/ocupacion', [AmbienteController::class, 'ocupacion']);
+Route::get('dashboard/horarios/metrics', [HorarioController::class, 'dashboardMetrics']);
+
 Route::get('listarArea', [AreaController::class, 'index']);
 Route::post('crearArea', [AreaController::class, 'store']);
 Route::get('verArea/{areaModel}', [AreaController::class, 'show']);

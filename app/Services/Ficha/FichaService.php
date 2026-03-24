@@ -38,4 +38,10 @@ class FichaService
     {
         return FichaModel::where('codigoFicha', $codigoFicha)->firstOrFail();
     }
+
+    public function countActivas(): int
+    {
+        $count = FichaModel::where('estado', '!=', 'Inactivo')->count();
+        return $count > 0 ? $count : FichaModel::count();
+    }
 }

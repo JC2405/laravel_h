@@ -59,4 +59,14 @@ class AmbienteController extends Controller
         $this->service->delete($eliminarAmbiente);
         return response()->json(["message"=>"Ambiente Eliminado Correctamente"]);
     }
+
+    public function countLibres()
+    {
+        return response()->json(['count' => $this->service->countLibres()]);
+    }
+
+    public function ocupacion()
+    {
+        return response()->json($this->service->ocupacion());
+    }
 }

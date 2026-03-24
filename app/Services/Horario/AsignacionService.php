@@ -557,6 +557,39 @@ class AsignacionService
     }
 
     // =========================================================================
+    //  DASHBOARD METRICS
+    // =========================================================================
+
+    public function dashboardMetrics(): array
+    {
+        $diasMapa = [
+            1 => 'Lunes', 2 => 'Martes', 3 => 'Miércoles',
+            4 => 'Jueves', 5 => 'Viernes', 6 => 'Sábado', 0 => 'Domingo'
+        ];
+        $diaActualNombre = $diasMapa[date('w')];
+        
+        $clasesDelDia = AsignacionModel::whereHas('bloque.dias', function ($query) use ($diaActualNombre) {
+            $query->where('nombreDia', $diaActualNombre)
+                  ->orWhere('nombre', $diaActualNombre);
+        })->count();
+
+        $horariosActivos = AsignacionModel::count();
+
+        $alertas = [];
+        if ($horariosActivos > 0) {
+            $alertas[] = "El sistema tiene {$horariosActivos} horarios activos en total.";
+        } else {
+            $alertas[] = "No hay horarios activos actualmente.";
+        }
+
+        return [
+            'clases_del_dia' => $clasesDelDia,
+            'horarios_activos' => $horariosActivos,
+            'alertas' => $alertas
+        ];
+    }
+
+    // =========================================================================
     //  MÉTODOS DE APOYO (PRIVADOS)
     // =========================================================================
 

@@ -64,4 +64,8 @@ class FuncionarioController extends Controller
         return response()->json(["message"=>"Funcionario Eliminado Correctamente"]);
     }
 
+    public function countInstructores()
+    {
+        return response()->json(['count' => $this->service->countInstructores()]);
+    }
 }

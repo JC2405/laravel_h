@@ -140,4 +140,9 @@ class HorarioController extends Controller
         $resultado = $this->servicioAsignaciones->listarClasesPorInstructor($idFuncionario);
         return response()->json($resultado);
     }
+
+    public function dashboardMetrics()
+    {
+        return response()->json($this->servicioAsignaciones->dashboardMetrics());
+    }
 }

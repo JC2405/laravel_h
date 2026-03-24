@@ -49,4 +49,8 @@ class FichaController extends Controller
         return response()->json($showFicha);
     }
 
+    public function countActivas()
+    {
+        return response()->json(['count' => $this->service->countActivas()]);
+    }
 }

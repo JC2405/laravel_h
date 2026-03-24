@@ -55,4 +55,9 @@ class FuncionarioService
         $funcionarioModel->delete();
     }
 
+    public function countInstructores(): int
+    {
+        return FuncionarioModel::count();
+    }
+
 }

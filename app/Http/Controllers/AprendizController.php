@@ -23,7 +23,8 @@ class AprendizController extends Controller
 
     public function store(createAprendizRequest $request)
     {
-        $crearAprendiz = $this->service->store($request->validated());
+        $validated = $request->validated();
+        $crearAprendiz = $this->service->store($validated, $validated['documento'] ?? '');
         return response()->json($crearAprendiz);
     }
 
@@ -45,5 +46,15 @@ class AprendizController extends Controller
     {
         $mostarDocumento = $this->service->show($documento);
         return response()->json($mostarDocumento);
+    }
+
+    public function countMatriculados()
+    {
+        return response()->json(['count' => $this->service->countMatriculados()]);
+    }
+
+    public function countByPrograma()
+    {
+        return response()->json($this->service->countByPrograma());
     }
 }

@@ -4,6 +4,7 @@ namespace App\Services\Ambiente;
 
 use App\Models\AmbienteModel;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 
 class AmbienteService
 {
@@ -12,9 +13,21 @@ class AmbienteService
         return AmbienteModel::with(['sede', 'area'])->orderBy('idAmbiente')->paginate(AmbienteModel::PAGINATION);
     }
 
-    public function ambientesVacios():
+    public function countLibres(): int
     {
-        $consulta = 
+        $count = AmbienteModel::where('estado', 'Activo')->count();
+        return $count > 0 ? $count : AmbienteModel::count();
+    }
+
+    public function ocupacion()
+    {
+        return DB::table('asignacion')
+            ->join('ambiente', 'asignacion.idAmbiente', '=', 'ambiente.idAmbiente')
+            ->select('ambiente.nombreAmbiente', DB::raw('count(asignacion.idAsignacion) as total_asignaciones'))
+            ->groupBy('ambiente.nombreAmbiente')
+            ->orderBy('total_asignaciones', 'desc')
+            ->limit(10)
+            ->get();
     }
 
 
