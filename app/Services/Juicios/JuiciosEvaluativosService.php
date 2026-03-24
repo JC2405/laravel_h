@@ -31,8 +31,8 @@ class JuiciosEvaluativosService
      * (la misma librería que usa maatwebsite/excel por debajo),
      * lo procesa y retorna el análisis completo.
      *
-     * @param  UploadedFile $archivo  El archivo .xlsx subido por el usuario
-     * @return array                  Análisis completo listo para retornar como JSON
+     * $archivo  El archivo .xlsx subido por el usuario
+     *           Análisis completo listo para retornar como JSON
      */
     public function analizar(UploadedFile $archivo): array
     {
@@ -40,7 +40,7 @@ class JuiciosEvaluativosService
         // IOFactory::load() carga el archivo en un objeto PhpSpreadsheet.
         // Usamos la ruta temporal del archivo subido — PHP la limpia solo después.
         $spreadsheet = IOFactory::load($archivo->getRealPath());
-        $hoja        = $spreadsheet->getActiveSheet();
+        $hoja= $spreadsheet->getActiveSheet();
 
         // toArray() convierte toda la hoja en un array PHP bidimensional.
         // El primer índice es la fila, el segundo es la columna (ambos desde 0).
@@ -69,7 +69,7 @@ class JuiciosEvaluativosService
             'metadata'         => $metadata,
             'total_aprendices' => $totalAprendices,
             'umbral_usado'     => self::UMBRAL_APROBACION,
-            'resumen' => [
+            'resumen' => [  
                 'competencias_necesitan_horario'  => count(array_filter($analisis, fn($c) => $c['necesita_horario'])),
                 'competencias_cubiertas'          => count(array_filter($analisis, fn($c) => !$c['necesita_horario'])),
             ],
@@ -146,12 +146,12 @@ class JuiciosEvaluativosService
                 continue;
             }
 
-            // Solo nos interesan estos dos juicios
+            // JUICIOS PRO EVALUACIO('APROBADO' Y 'POR EVALUAR')
             if (!in_array(strtoupper($juicio), ['APROBADO', 'POR EVALUAR'])) {
                 continue;
             }
 
-            // Usamos la competencia y resultado completos como claves
+            // Se usa la competencia y resultado completos como claves
             // para preservar toda la información
             if (!isset($conteos[$competencia][$resultado])) {
                 $conteos[$competencia][$resultado] = [
@@ -160,7 +160,7 @@ class JuiciosEvaluativosService
                 ];
             }
 
-            // Guardamos el documento para contar únicos
+            // Guarda el documento para contar únicos
             // (array_unique después evita duplicados)
             if (strtoupper($juicio) === 'APROBADO') {
                 $conteos[$competencia][$resultado]['aprobados'][$documento] = true;

@@ -10,7 +10,7 @@ class ProgramaModel extends Model
     protected $primaryKey = 'idPrograma';
     public $timestamps = false;
     protected $fillable = ['nombre','codigo','version','estado','idTipoFormacion'];
-    public const PAGINATION = 10;
+    //public const PAGINATION = 10;
 
 
     public function tipoFormacion() {

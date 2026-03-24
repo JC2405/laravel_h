@@ -85,7 +85,7 @@ class ReporteCompetenciasService
         $cubiertas  = [];
 
         foreach ($competenciasDeBD as $competenciaBD) {
-            $codigoBD      = trim($competenciaBD->codigo);
+            $codigoBD = trim($competenciaBD->codigo);
             $datosDelExcel = $competenciasDelExcel->get($codigoBD);
 
             // Construir el índice de resultados del Excel para esta competencia

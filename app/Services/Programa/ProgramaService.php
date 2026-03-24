@@ -2,13 +2,13 @@
 
 namespace App\Services\Programa;
 use App\Models\ProgramaModel;
-use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
 
 class ProgramaService
 {
-    public function getAll():LengthAwarePaginator
+    public function getAll():Collection
     {
-        return ProgramaModel::with('tipoFormacion')->orderBy('idPrograma')->paginate(ProgramaModel::PAGINATION);
+        return ProgramaModel::orderBy('idPrograma')->get();
     }
 
     public function create(array $data):ProgramaModel
