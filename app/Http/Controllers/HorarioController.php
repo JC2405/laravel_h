@@ -198,7 +198,6 @@ class HorarioController extends Controller
 
     public function enviarHorario(int $idFuncionario)
     {
-        // Obtener clases + grilla del instructor
         $horario = $this->servicioAsignaciones->listarClasesPorInstructor($idFuncionario);
  
         // Buscar el funcionario para tener su correo

@@ -93,15 +93,6 @@
             letter-spacing: 2px;
             text-transform: uppercase;
             margin-bottom: 14px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .section-label::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: #e8eaed;
         }
 
         /* ── Tabla ── */
@@ -131,7 +122,7 @@
             border: 1px solid #e2e5ea;
             padding: 7px 5px;
             text-align: center;
-            vertical-align: middle;
+            vertical-align: top;
         }
 
         .td-hora {
@@ -143,9 +134,10 @@
             text-align: left;
             padding: 10px 6px 10px 14px;
             border-left: 3px solid #4caa16;
+            vertical-align: middle;
         }
 
-        /* ── Clase/Badge ── */
+        /* ── Clase/Badge — puede haber varias por celda ── */
         .clase {
             display: block;
             background: #ffffff;
@@ -154,11 +146,10 @@
             border-radius: 4px;
             padding: 7px 9px;
             text-align: left;
-            margin-bottom: 6px;
+            margin-bottom: 5px;
         }
-        .clase:last-child {
-            margin-bottom: 0;
-        }
+        .clase:last-child { margin-bottom: 0; }
+
         .clase-instructor {
             font-size: 11px;
             font-weight: 700;
@@ -172,11 +163,19 @@
             display: block;
             line-height: 1.4;
         }
+        .clase-ficha {
+            font-size: 10px;
+            color: #9ca3af;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: 0.3px;
+            margin-top: 3px;
+            display: block;
+        }
         .clase-ambiente {
             font-size: 10px;
             color: #4caa16;
             font-weight: 600;
-            margin-top: 5px;
+            margin-top: 4px;
             display: block;
         }
 
@@ -230,9 +229,12 @@
         </div>
     </div>
 
-    {{-- ── Saludo ── --}}
+    {{-- ── Saludo ──
+         $aprendiz es el objeto AprendizModel pasado desde el controller.
+         $horario  es el array ['ok', 'asignaciones', 'grilla'] construido en el controller.
+    --}}
     <div class="greeting">
-        Estimado {{ $aprendiz->nombre ?? 'aprendiz' }}, 
+        Estimado {{ $aprendiz->nombre ?? 'aprendiz' }},
         a continuación encontrará su horario de clases asignado para la semana en curso.
     </div>
 
@@ -241,15 +243,20 @@
         <div class="section-label">Grilla semanal</div>
 
         @php
-            $grilla = $horario['grilla'] ?? [];
-            $dias   = ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes','Sabado'];
+            /*
+             * La grilla de aprendices tiene estructura:
+             *   [ "HH:MM - HH:MM" => [ "Lunes" => [ clase1, clase2, ... ], "Martes" => [...] ] ]
+             *
+             * Cada $celda[$dia] es un ARRAY de clases (puede haber varias por franja-día).
+             */
+            $grilla  = $horario['grilla'] ?? [];
+            $dias    = ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado'];
 
-            // Filtrar solo franjas que tengan clases
+            // Filtrar franjas que tengan al menos una clase en algún día
             $grillaNeta = array_filter($grilla, function ($celdas) use ($dias) {
-                foreach ($dias as $d) { 
-                    if (isset($celdas[$d]) && is_array($celdas[$d]) && !empty($celdas[$d])) {
-                        return true;
-                    }
+                if (!is_array($celdas)) return false;
+                foreach ($dias as $d) {
+                    if (!empty($celdas[$d]) && is_array($celdas[$d])) return true;
                 }
                 return false;
             });
@@ -268,21 +275,30 @@
                 @forelse ($grillaNeta as $franja => $celdas)
                 <tr>
                     <td class="td-hora">{{ $franja }}</td>
+
                     @foreach ($dias as $dia)
+                        @php
+                            $clase = $celdas[$dia] ?? null;
+                        @endphp
                         <td>
-                            {{-- Si hay clases en esta franja-día (puede haber varias) --}}
-                            @if (isset($celdas[$dia]) && is_array($celdas[$dia]))
-                                @foreach ($celdas[$dia] as $clase)
-                                    <div class="clase">
-                                        <span class="clase-instructor">{{ $clase['instructor'] ?? '—' }}</span>
-                                        <span class="clase-programa">
-                                            {{ \Illuminate\Support\Str::limit($clase['programa'] ?? '', 38) }}
-                                        </span>
-                                        <span class="clase-ambiente">
-                                            {{ $clase['ambiente'] ?? 'Virtual' }}
-                                        </span>
-                                    </div>
-                                @endforeach
+                            @if ($clase)
+                                @php
+                                    $instructor = $clase['instructor'] ?? '—';
+                                    $programa   = \Illuminate\Support\Str::limit($clase['programa'] ?? '—', 40);
+                                    $ambiente   = $clase['ambiente'] ?? 'Virtual';
+                                    $ficha      = $clase['ficha'] ?? null;
+                                @endphp
+                    
+                                <div class="clase">
+                                    <span class="clase-instructor">{{ $instructor }}</span>
+                                    <span class="clase-programa">{{ $programa }}</span>
+                    
+                                    @if ($ficha)
+                                        <span class="clase-ficha">Ficha {{ $ficha }}</span>
+                                    @endif
+                    
+                                    <span class="clase-ambiente">{{ $ambiente }}</span>
+                                </div>
                             @endif
                         </td>
                     @endforeach

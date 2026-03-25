@@ -167,5 +167,5 @@ Route::get('reportes/descargar/{nombre}',        [ReporteController::class, 'des
 Route::post('/enviarHorario/{id}', [HorarioController::class, 'enviarHorario']);
 
 
-Route::get('enviarHorarioAprendiz/{id}',[HorarioController::class,'enviarHorarioAprendiz']);
+Route::post('enviarHorarioAprendiz/{id}',[HorarioController::class,'enviarHorarioAprendiz']);
 

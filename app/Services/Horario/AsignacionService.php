@@ -529,67 +529,79 @@ class AsignacionService
      *
      */
     public function construirGrillaParaAprendices($asignacionesDeLaFicha): array
-    {
-        $franjasDisponibles = $this->generarFranjasHorarias();
- 
-        // Inicializar cada franja con un array vacío
-        $grilla = array_fill_keys($franjasDisponibles, []);
- 
-        foreach ($asignacionesDeLaFicha as $asignacion) {
-            $bloqueHorario = $asignacion->bloque;
-            if (!$bloqueHorario) continue;
- 
-            $horaInicioDelBloque = $bloqueHorario->horaInicio ?? $bloqueHorario->hora_inicio ?? null;
-            $horaFinDelBloque    = $bloqueHorario->horaFin    ?? $bloqueHorario->hora_fin    ?? null;
-            if (!$horaInicioDelBloque || !$horaFinDelBloque) continue;
- 
-            $fechaInicioDelBloque = $bloqueHorario->fechaInicio ?? $bloqueHorario->fecha_inicio ?? null;
-            $fechaFinDelBloque    = $bloqueHorario->fechaFin    ?? $bloqueHorario->fecha_fin    ?? null;
- 
-            foreach ($franjasDisponibles as $franja) {
-                if (!$this->bloqueSeSOlapaConFranja($franja, $horaInicioDelBloque, $horaFinDelBloque)) {
+{
+    $franjasDisponibles = $this->generarFranjasHorarias();
+
+    // Inicializar cada franja
+    $grilla = array_fill_keys($franjasDisponibles, []);
+
+    foreach ($asignacionesDeLaFicha as $asignacion) {
+
+        $bloqueHorario = $asignacion->bloque;
+        if (!$bloqueHorario) continue;
+
+        $horaInicioDelBloque = $bloqueHorario->horaInicio ?? $bloqueHorario->hora_inicio ?? null;
+        $horaFinDelBloque    = $bloqueHorario->horaFin    ?? $bloqueHorario->hora_fin    ?? null;
+
+        if (!$horaInicioDelBloque || !$horaFinDelBloque) continue;
+
+        $fechaInicioDelBloque = $bloqueHorario->fechaInicio ?? $bloqueHorario->fecha_inicio ?? null;
+        $fechaFinDelBloque    = $bloqueHorario->fechaFin    ?? $bloqueHorario->fecha_fin    ?? null;
+
+        foreach ($franjasDisponibles as $franja) {
+
+            if (!$this->bloqueSeSOlapaConFranja($franja, $horaInicioDelBloque, $horaFinDelBloque)) {
+                continue;
+            }
+
+            foreach ($bloqueHorario->dias as $dia) {
+
+                $nombreDelDia = $dia->nombreDia ?? $dia->nombre ?? null;
+                if (!$nombreDelDia) continue;
+
+                // 🚫 EVITAR SOLAPAMIENTOS (clave del fix)
+                if (isset($grilla[$franja][$nombreDelDia])) {
+
+                    // (opcional) log para debug
+                    logger()->warning('Solapamiento detectado en grilla de aprendices', [
+                        'franja' => $franja,
+                        'dia' => $nombreDelDia,
+                        'asignacion_nueva' => $asignacion->idAsignacion ?? null,
+                        'asignacion_existente' => $grilla[$franja][$nombreDelDia]['idAsignacion'] ?? null,
+                    ]);
+
                     continue;
                 }
- 
-                foreach ($bloqueHorario->dias as $dia) {
-                    $nombreDelDia = $dia->nombreDia ?? $dia->nombre ?? null;
-                    if (!$nombreDelDia) continue;
- 
-                    // Obtén ficha y programa
-                    $fichaNumero = $asignacion->ficha
-                        ? $asignacion->ficha->numero ?? '—'
-                        : '—';
- 
-                    $nombrePrograma = $asignacion->ficha && $asignacion->ficha->programa
-                        ? $asignacion->ficha->programa->nombre ?? '—'
-                        : '—';
- 
-                    // Descripción del ambiente
-                    $descripcionDelAmbiente = $asignacion->ambiente
-                        ? ($asignacion->ambiente->codigo . ' - No.' . ($asignacion->ambiente->numero ?? ''))
-                        : 'Virtual';
- 
-                    // ✅ CLAVE: Inicializar como array si no existe
-                    if (!isset($grilla[$franja][$nombreDelDia])) {
-                        $grilla[$franja][$nombreDelDia] = [];
-                    }
- 
-                    // ✅ Añadir a un array, permitiendo múltiples clases sin sobrescribir
-                    $grilla[$franja][$nombreDelDia][] = [
-                        'ficha'        => $fichaNumero,
-                        'programa'     => $nombrePrograma,
-                        'instructor'   => $asignacion->funcionario->nombre ?? '—',
-                        'ambiente'     => $descripcionDelAmbiente,
-                        'modalidad'    => $asignacion->modalidad,
-                        'fechaInicio'  => $fechaInicioDelBloque,
-                        'fechaFin'     => $fechaFinDelBloque,
-                        'idBloque'     => $bloqueHorario->idBloque,
-                        'idAsignacion' => $asignacion->idAsignacion,
-                    ];
-                }
+
+                // Datos
+                $fichaNumero = $asignacion->ficha
+                    ? $asignacion->ficha->numero ?? '—'
+                    : '—';
+
+                $nombrePrograma = $asignacion->ficha && $asignacion->ficha->programa
+                    ? $asignacion->ficha->programa->nombre ?? '—'
+                    : '—';
+
+                $descripcionDelAmbiente = $asignacion->ambiente
+                    ? ($asignacion->ambiente->codigo . ' - No.' . ($asignacion->ambiente->numero ?? ''))
+                    : 'Virtual';
+
+                // ✅ SOLO UNA clase por celda (sin array)
+                $grilla[$franja][$nombreDelDia] = [
+                    'ficha'        => $fichaNumero,
+                    'programa'     => $nombrePrograma,
+                    'instructor'   => $asignacion->funcionario->nombre ?? '—',
+                    'ambiente'     => $descripcionDelAmbiente,
+                    'modalidad'    => $asignacion->modalidad,
+                    'fechaInicio'  => $fechaInicioDelBloque,
+                    'fechaFin'     => $fechaFinDelBloque,
+                    'idBloque'     => $bloqueHorario->idBloque,
+                    'idAsignacion' => $asignacion->idAsignacion,
+                ];
             }
         }
- 
+    }
+
         return $grilla;
     }
 

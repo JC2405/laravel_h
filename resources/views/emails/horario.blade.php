@@ -93,15 +93,6 @@
             letter-spacing: 2px;
             text-transform: uppercase;
             margin-bottom: 14px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .section-label::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: #e8eaed;
         }
 
         /* ── Tabla ── */
@@ -226,22 +217,37 @@
         </div>
     </div>
 
-    {{-- ── Saludo ── --}}
-   <div class="greeting">
-    Estimado {{ $aprendiz->nombre ?? 'instructor' }}, 
-    a continuación encontrará su horario de clases asignado para la semana en curso.
+    {{-- ── Saludo ──
+         CORRECCIÓN: la variable que llega es $horario (array con 'clases' y 'grilla'),
+         NO existe $aprendiz en este correo. Se obtiene el nombre del primer instructor
+         desde la primera clase disponible.
+    --}}
+    <div class="greeting">
+        @php
+            $nombreInstructor = null;
+            $primeraClase = collect($horario['clases'] ?? [])->first();
+            if ($primeraClase) {
+                $nombreInstructor = $primeraClase->funcionario->nombre
+                    ?? $primeraClase['funcionario']['nombre']
+                    ?? null;
+            }
+        @endphp
+        Estimado{{ $nombreInstructor ? ' ' . $nombreInstructor : ' instructor' }},
+        a continuación encontrará su horario de clases asignado para la semana en curso.
     </div>
 
-    {{-- ── Grilla ── --}}
+ 
     <div class="body">
         <div class="section-label">Grilla semanal</div>
 
         @php
             $grilla = $horario['grilla'] ?? [];
-            $dias   = ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes','Sabado'];
+            $dias   = ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado'];
 
             $grillaNeta = array_filter($grilla, function ($celdas) use ($dias) {
-                foreach ($dias as $d) { if (isset($celdas[$d])) return true; }
+                foreach ($dias as $d) {
+                    if (!empty($celdas[$d])) return true;
+                }
                 return false;
             });
         @endphp
@@ -261,10 +267,17 @@
                     <td class="td-hora">{{ $franja }}</td>
                     @foreach ($dias as $dia)
                         <td>
-                            @if (isset($celdas[$dia]))
+                            {{--
+                                CORRECCIÓN: la grilla del instructor tiene celdas como:
+                                ['ficha' => 'Ficha 3171062', 'programa' => '...', 'ambiente' => '...', ...]
+                                NO es un array anidado como la de aprendices.
+                            --}}
+                            @if (!empty($celdas[$dia]))
                                 @php $celda = $celdas[$dia]; @endphp
                                 <div class="badge">
-                                    <span class="badge-ficha">{{ $celda['ficha'] ?? '—' }}</span>
+                                    <span class="badge-ficha">
+                                        {{ $celda['ficha'] ?? '—' }}
+                                    </span>
                                     <span class="badge-programa">
                                         {{ \Illuminate\Support\Str::limit($celda['programa'] ?? '', 38) }}
                                     </span>
@@ -278,7 +291,8 @@
                 </tr>
                 @empty
                 <tr class="empty-row">
-                    <td colspan="6">No hay clases asignadas para esta semana.</td>
+                    {{-- CORRECCIÓN: colspan debe ser 7 (franja + 6 días) --}}
+                    <td colspan="7">No hay clases asignadas para esta semana.</td>
                 </tr>
                 @endforelse
             </tbody>
