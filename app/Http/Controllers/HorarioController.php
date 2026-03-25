@@ -3,7 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Horario\CreateAsignacionRequest;
+use App\Mail\HorarioAprendizMail;
 use App\Services\Horario\AsignacionService;
+use App\Mail\HorarioInstructorMail;
+use App\Models\AprendizModel;
+use App\Models\AsignacionModel;
+use App\Models\FuncionarioModel;
+use Illuminate\Support\Facades\Mail;
+
 
 /**
  * HorarioController
@@ -74,6 +81,8 @@ class HorarioController extends Controller
         return response()->json(['message' => $resultado['mensaje']]);
     }
 
+
+
     /**
      * DELETE /api/eliminarDiaDeBloque/{idBloque}/{idDia}
      *
@@ -140,6 +149,72 @@ class HorarioController extends Controller
         $resultado = $this->servicioAsignaciones->listarClasesPorInstructor($idFuncionario);
         return response()->json($resultado);
     }
+
+
+
+    /**
+     * POST /api/enviarHorarioAprendiz/{idFicha}
+     * 
+     * Envía el horario a todos los aprendices de una ficha.
+     * ✅ NUEVO: Usa construirGrillaParaAprendices() para mostrar TODAS las clases
+     * (incluso las superpuestas en la misma franja-día)
+     */
+    public function enviarHorarioAprendiz(int $idFicha)
+    {
+        // Obtener las asignaciones de la ficha con todas las relaciones
+        $asignacionesDeLaFicha = AsignacionModel::with([
+                'bloque.dias',
+                'funcionario',
+                'ambiente',
+                'ficha.programa',
+            ])
+            ->where('idFicha', $idFicha)
+            ->orderByDesc('idAsignacion')
+            ->get();
+ 
+        // ✅ Construir la grilla que PERMITE múltiples clases por franja-día
+        $resultado = [
+            'ok'           => true,
+            'asignaciones' => $asignacionesDeLaFicha,
+            'grilla'       => $this->servicioAsignaciones->construirGrillaParaAprendices($asignacionesDeLaFicha),
+        ];
+ 
+        // Obtener los aprendices de la ficha
+        $aprendices = AprendizModel::where('idficha', $idFicha)->get();
+ 
+        // Enviar correo a cada aprendiz
+        foreach ($aprendices as $aprendiz) {
+            Mail::to($aprendiz->correo)
+                ->send(new HorarioAprendizMail($resultado, $aprendiz));
+        }
+ 
+        return response()->json([
+            'ok' => true,
+            'mensaje' => 'Correos enviados correctamente.',
+            'aprendices_notificados' => $aprendices->count()
+        ]);
+    }
+
+
+    public function enviarHorario(int $idFuncionario)
+    {
+        // Obtener clases + grilla del instructor
+        $horario = $this->servicioAsignaciones->listarClasesPorInstructor($idFuncionario);
+ 
+        // Buscar el funcionario para tener su correo
+        $funcionario = FuncionarioModel::findOrFail($idFuncionario);
+ 
+        // Enviar el correo — $horario llega a la vista como $horario['grilla']
+        Mail::to($funcionario->correo)
+        //Mail::to('chaparrobarrerajulian@gmail.com')
+            ->send(new HorarioInstructorMail($horario));
+ 
+        return response()->json(['ok' => true, 'mensaje' => 'Correo enviado correctamente.']);
+    }
+
+
+    
+
 
     public function dashboardMetrics()
     {

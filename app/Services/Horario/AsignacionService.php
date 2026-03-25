@@ -387,8 +387,7 @@ class AsignacionService
      *    "08:00 - 10:00": { ... }
      *  }
      *
-     * @param  int $idFicha  ID de la ficha (grupo de aprendices)
-     * @return array
+     *  $idFicha  ID de la ficha (grupo de aprendices)
      */
     public function listarAsignacionesPorFicha(int $idFicha): array
     {
@@ -446,43 +445,139 @@ class AsignacionService
      * @return array  Grilla [ franja => [ dia => datosDeLaCelda ] ]
      */
     public function construirGrillaParaFicha($asignacionesDeLaFicha): array
+{
+    $franjasDisponibles = $this->generarFranjasHorarias();
+
+    // Inicializar cada franja con un array vacío
+    $grilla = array_fill_keys($franjasDisponibles, []);
+
+    foreach ($asignacionesDeLaFicha as $asignacion) {
+        $bloqueHorario = $asignacion->bloque;
+        if (!$bloqueHorario) continue;
+
+        // Aceptar tanto camelCase como snake_case del modelo
+        $horaInicioDelBloque = $bloqueHorario->horaInicio ?? $bloqueHorario->hora_inicio ?? null;
+        $horaFinDelBloque    = $bloqueHorario->horaFin    ?? $bloqueHorario->hora_fin    ?? null;
+        if (!$horaInicioDelBloque || !$horaFinDelBloque) continue;
+
+        $fechaInicioDelBloque = $bloqueHorario->fechaInicio ?? $bloqueHorario->fecha_inicio ?? null;
+        $fechaFinDelBloque    = $bloqueHorario->fechaFin    ?? $bloqueHorario->fecha_fin    ?? null;
+
+        foreach ($franjasDisponibles as $franja) {
+            // Si el bloque no cae dentro de esta franja, pasar a la siguiente
+            if (!$this->bloqueSeSOlapaConFranja($franja, $horaInicioDelBloque, $horaFinDelBloque)) {
+                continue;
+            }
+
+            foreach ($bloqueHorario->dias as $dia) {
+                $nombreDelDia = $dia->nombreDia ?? $dia->nombre ?? null;
+                if (!$nombreDelDia) continue;
+
+                // No sobreescribir si ya se llenó esa celda
+                if (isset($grilla[$franja][$nombreDelDia])) continue;
+
+                // Descripción del ambiente o "Virtual" si no hay aula
+                $descripcionDelAmbiente = $asignacion->ambiente
+                    ? ($asignacion->ambiente->codigo . ' - No.' . ($asignacion->ambiente->numero ?? ''))
+                    : 'Virtual';
+
+                // ✅ AQUÍ: Obtén ficha y programa de la asignación
+                $fichaNumero = $asignacion->ficha
+                    ? $asignacion->ficha->numero ?? '—'
+                    : '—';
+
+                $nombrePrograma = $asignacion->ficha && $asignacion->ficha->programa
+                    ? $asignacion->ficha->programa->nombre ?? '—'
+                    : '—';
+
+                $grilla[$franja][$nombreDelDia] = [
+                    'ficha'        => $fichaNumero,           // ✅ NUEVO
+                    'programa'     => $nombrePrograma,        // ✅ NUEVO
+                    'instructor'   => $asignacion->funcionario->nombre ?? '—',
+                    'ambiente'     => $descripcionDelAmbiente,
+                    'modalidad'    => $asignacion->modalidad,
+                    'fechaInicio'  => $fechaInicioDelBloque,
+                    'fechaFin'     => $fechaFinDelBloque,
+                    'idBloque'     => $bloqueHorario->idBloque,
+                    'idAsignacion' => $asignacion->idAsignacion,
+                ];
+            }
+        }
+    }
+
+    return $grilla;
+    }
+
+
+      /**
+     * Construye la grilla horaria vista desde el ángulo de un APRENDIZ.
+     *
+     * A diferencia de construirGrillaParaFicha(), esta permite múltiples clases
+     * en la misma franja-día (no descarta superpuestos). Cada celda contiene
+     * un array de clases que pueden ocurrir en el mismo horario.
+     *
+     * Estructura retornada:
+     *  {
+     *    "06:00 - 08:00": {
+     *       "Lunes": [
+     *         { instructor, programa, ambiente, ... },
+     *         { instructor, programa, ambiente, ... }
+     *       ],
+     *       "Martes": [ ... ]
+     *    }
+     *  }
+     *
+     */
+    public function construirGrillaParaAprendices($asignacionesDeLaFicha): array
     {
         $franjasDisponibles = $this->generarFranjasHorarias();
-
+ 
         // Inicializar cada franja con un array vacío
         $grilla = array_fill_keys($franjasDisponibles, []);
-
+ 
         foreach ($asignacionesDeLaFicha as $asignacion) {
             $bloqueHorario = $asignacion->bloque;
             if (!$bloqueHorario) continue;
-
-            // Aceptar tanto camelCase como snake_case del modelo
+ 
             $horaInicioDelBloque = $bloqueHorario->horaInicio ?? $bloqueHorario->hora_inicio ?? null;
             $horaFinDelBloque    = $bloqueHorario->horaFin    ?? $bloqueHorario->hora_fin    ?? null;
             if (!$horaInicioDelBloque || !$horaFinDelBloque) continue;
-
+ 
             $fechaInicioDelBloque = $bloqueHorario->fechaInicio ?? $bloqueHorario->fecha_inicio ?? null;
             $fechaFinDelBloque    = $bloqueHorario->fechaFin    ?? $bloqueHorario->fecha_fin    ?? null;
-
+ 
             foreach ($franjasDisponibles as $franja) {
-                // Si el bloque no cae dentro de esta franja, pasar a la siguiente
                 if (!$this->bloqueSeSOlapaConFranja($franja, $horaInicioDelBloque, $horaFinDelBloque)) {
                     continue;
                 }
-
+ 
                 foreach ($bloqueHorario->dias as $dia) {
                     $nombreDelDia = $dia->nombreDia ?? $dia->nombre ?? null;
                     if (!$nombreDelDia) continue;
-
-                    // No sobreescribir si ya se llenó esa celda
-                    if (isset($grilla[$franja][$nombreDelDia])) continue;
-
-                    // Descripción del ambiente o "Virtual" si no hay aula
+ 
+                    // Obtén ficha y programa
+                    $fichaNumero = $asignacion->ficha
+                        ? $asignacion->ficha->numero ?? '—'
+                        : '—';
+ 
+                    $nombrePrograma = $asignacion->ficha && $asignacion->ficha->programa
+                        ? $asignacion->ficha->programa->nombre ?? '—'
+                        : '—';
+ 
+                    // Descripción del ambiente
                     $descripcionDelAmbiente = $asignacion->ambiente
                         ? ($asignacion->ambiente->codigo . ' - No.' . ($asignacion->ambiente->numero ?? ''))
                         : 'Virtual';
-
-                    $grilla[$franja][$nombreDelDia] = [
+ 
+                    // ✅ CLAVE: Inicializar como array si no existe
+                    if (!isset($grilla[$franja][$nombreDelDia])) {
+                        $grilla[$franja][$nombreDelDia] = [];
+                    }
+ 
+                    // ✅ Añadir a un array, permitiendo múltiples clases sin sobrescribir
+                    $grilla[$franja][$nombreDelDia][] = [
+                        'ficha'        => $fichaNumero,
+                        'programa'     => $nombrePrograma,
                         'instructor'   => $asignacion->funcionario->nombre ?? '—',
                         'ambiente'     => $descripcionDelAmbiente,
                         'modalidad'    => $asignacion->modalidad,
@@ -494,7 +589,7 @@ class AsignacionService
                 }
             }
         }
-
+ 
         return $grilla;
     }
 

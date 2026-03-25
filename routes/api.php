@@ -163,3 +163,9 @@ Route::post('reportes/competencias-pendientes',  [ReporteController::class, 'gen
 // Descarga un .txt de reporte ya generado
 Route::get('reportes/descargar/{nombre}',        [ReporteController::class, 'descargarReporte']);
 
+
+Route::post('/enviarHorario/{id}', [HorarioController::class, 'enviarHorario']);
+
+
+Route::get('enviarHorarioAprendiz/{id}',[HorarioController::class,'enviarHorarioAprendiz']);
+
