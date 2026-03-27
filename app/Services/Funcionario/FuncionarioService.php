@@ -30,6 +30,22 @@ class FuncionarioService
         return $funcionario->load('areas');
     }
 
+    
+     public function crearAdminHorarios(array $data, string $documento):FuncionarioModel
+    {
+        $data['password'] = $documento;
+         $funcionario = FuncionarioModel::create($data);
+         $funcionario->roles()->attach(1);
+         
+         
+        if (isset($data['areas'])) {
+            $funcionario->areas()->sync($data['areas']);
+        }
+
+        return $funcionario->load('areas');
+    }
+
+
     public function show($documento)
     {
         $funcionario = FuncionarioModel::with('areas')->where('documento', $documento)->firstOrFail();
@@ -60,4 +76,6 @@ class FuncionarioService
         return FuncionarioModel::count();
     }
 
+
+   
 }

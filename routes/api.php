@@ -56,6 +56,12 @@ Route::delete('eliminarTipoContrato/{idTipoContrato}',[TipoContratoController::c
 Route::get('listarMunicipio',[MunicipioController::class,'index']);
 Route::post('crearMunicipio',[MunicipioController::class,'store']);
 Route::delete('eliminarMunicipio/{idMunicipio}',[MunicipioController::class,'destroy']);
+Route::get('fichas/programa-municipio/{idMunicipio}',[FichaController::class,'listarFichasProgramaMunicipio']);
+
+// ── Flujo jerarquico: Municipio → Programa → Ficha ────────────────────────────
+Route::get('municipios-con-fichas',                                        [MunicipioController::class,'municipiosConFichas']);
+Route::get('programas-por-municipio/{idMunicipio}',                        [FichaController::class,'programasPorMunicipio']);
+Route::get('fichas-por-programa-municipio/{idPrograma}/{idMunicipio}',     [FichaController::class,'fichasPorProgramaMunicipio']);
 
 
 
@@ -86,6 +92,7 @@ Route::post('crearFuncionario',[FuncionarioController::class,'store']);
 Route::put('editarFuncionario/{idFuncionario}',[FuncionarioController::class,'update']);
 Route::get('listarFuncionatioXDocumento/{documento}',[FuncionarioController::class,'show']);
 Route::delete('eliminarFuncionario/{idFuncionario}',[FuncionarioController::class,'destroy']);
+Route::post('crearAdmin',[FuncionarioController::class,'crearAdmin']);
 
 
 Route::get('listarAmbiente',[AmbienteController::class,'index']);

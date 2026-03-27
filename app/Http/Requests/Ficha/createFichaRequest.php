@@ -22,14 +22,14 @@ class createFichaRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'codigoFicha'=>'required|string|max:255',
-            'jornada'=>'required|string|max:255',
-            'fechaInicio'=>'required|date|max:255',
-            'fechaFin'=>'required|date|max:255',
-            'estado'=>'required|string|max:255',
-            'modalidad'=>'required|string|max:255',
-            'idPrograma'=>'required|integer|max:255',
- 
+            'codigoFicha'  => 'required|string|max:255',
+            'jornada'      => 'required|string|max:255',
+            'fechaInicio'  => 'required|date|max:255',
+            'fechaFin'     => 'required|date|max:255',
+            'estado'       => 'required|string|max:255',
+            'modalidad'    => 'required|string|max:255',
+            'idPrograma'   => 'required|integer',
+            'idMunicipio'  => 'required|integer|exists:municipio,idMunicipio',
         ];
     }
 }

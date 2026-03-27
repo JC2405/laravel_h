@@ -16,4 +16,8 @@ class MunicipioModel extends Model
      public function sedes() {
         return $this->hasMany(SedeModel::class, 'idMunicipio', 'idMunicipio');
     }
+
+    public function fichas() {
+        return $this->hasMany(FichaModel::class, 'idMunicipio', 'idMunicipio');
+    }
 }

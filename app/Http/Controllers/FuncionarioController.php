@@ -21,6 +21,12 @@ class FuncionarioController extends Controller
         return response()->json($listarFuncionarios);
     }
 
+    public function crearAdmin(createFuncionarioRequest $request)
+    {
+        $validated = $request->validated();
+        $crearFuncionario = $this->service->crearAdminHorarios($validated, $validated['documento']);
+         return response()->json($crearFuncionario, 201);
+    }
     
 
     /**
@@ -60,8 +66,21 @@ class FuncionarioController extends Controller
     public function destroy($idFuncionario)
     {
         $eliminarFuncionario = FuncionarioModel::findOrFail($idFuncionario);
-        $this->service->delete($eliminarFuncionario);
-        return response()->json(["message"=>"Funcionario Eliminado Correctamente"]);
+        
+        try {
+            $this->service->delete($eliminarFuncionario);
+            return response()->json(["message"=>"Funcionario Eliminado Correctamente"]);
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Error 1451 is "Cannot delete or update a parent row: a foreign key constraint fails"
+            if ($e->getCode() == 23000) {
+                return response()->json([
+                    "message" => "No se puede eliminar este instructor porque tiene horarios u otros datos asignados."
+                ], 400);
+            }
+            return response()->json([
+                "message" => "Error al eliminar el instructor en la base de datos."
+            ], 500);
+        }
     }
 
     public function countInstructores()

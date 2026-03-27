@@ -13,6 +13,7 @@ class FuncionarioModel extends Authenticatable implements JWTSubject
 
     protected $fillable = [
         'nombre',
+        'apellido',
         'documento',
         'correo',
         'telefono',

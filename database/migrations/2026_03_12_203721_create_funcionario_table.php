@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('funcionario', function (Blueprint $table) {
             $table->unsignedInteger('idFuncionario')->autoIncrement();
             $table->string('nombre', 140);
+            $table->string('apellido',140);
             $table->string('documento', 40)->nullable();
             $table->string('correo', 160)->unique('uqFuncionarioCorreo');
             $table->string('telefono', 40)->nullable();

@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('aprendiz', function (Blueprint $table) {
             $table->unsignedInteger('idAprendiz')->autoIncrement();
             $table->string('nombre', 140);
+            $table->string('apellido',140);
             $table->string('documento', 40)->unique('uqAprendizDocumento');
             $table->string('correo', 160)->unique('uqAprendizCorreo');
             $table->string('telefono', 40)->nullable();

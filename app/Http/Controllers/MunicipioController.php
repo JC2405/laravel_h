@@ -29,6 +29,17 @@ class MunicipioController extends Controller
 
 
     /**
+     * GET /api/municipios-con-fichas
+     * Devuelve solo los municipios que tienen al menos una ficha asignada.
+     */
+    public function municipiosConFichas()
+    {
+        return response()->json(
+            $this->service->obtenerMunicipiosConFichas()
+        );
+    }
+
+    /**
      * Remove the specified resource from storage.
      */
     public function destroy($idMunicipio)

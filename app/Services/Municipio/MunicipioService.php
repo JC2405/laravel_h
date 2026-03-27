@@ -29,4 +29,15 @@ class MunicipioService
     {
         $municipioModel->delete();
     }
+
+    /**
+     * Retorna solo los municipios que tienen al menos una ficha asignada.
+     * Usado por el flujo jerárquico de creación de horarios.
+     */
+    public function obtenerMunicipiosConFichas(): \Illuminate\Database\Eloquent\Collection
+    {
+        return MunicipioModel::whereHas('fichas')
+            ->orderBy('nombreMunicipio')
+            ->get();
+    }
 }

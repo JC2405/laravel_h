@@ -21,7 +21,11 @@ class FichaController extends Controller
         return response()->json($listarFichas);
     }
 
-
+    public function listarFichasProgramaMunicipio($idMunicipio)
+    {
+        $data = $this->service->countFichasPorProgramaYMunicipio($idMunicipio);
+        return response()->json($data);
+    }
 
     public function store(createFichaRequest $request)
     {
@@ -47,6 +51,28 @@ class FichaController extends Controller
     {
         $showFicha = $this->service->show($codigoFicha);
         return response()->json($showFicha);
+    }
+
+    /**
+     * GET /api/programas-por-municipio/{idMunicipio}
+     * Devuelve los programas distintos que tienen fichas en el municipio indicado.
+     */
+    public function programasPorMunicipio($idMunicipio)
+    {
+        return response()->json(
+            $this->service->obtenerProgramasPorMunicipio((int) $idMunicipio)
+        );
+    }
+
+    /**
+     * GET /api/fichas-por-programa-municipio/{idPrograma}/{idMunicipio}
+     * Devuelve las fichas activas que corresponden al programa y municipio dados.
+     */
+    public function fichasPorProgramaMunicipio($idPrograma, $idMunicipio)
+    {
+        return response()->json(
+            $this->service->obtenerFichasPorProgramaMunicipio((int) $idPrograma, (int) $idMunicipio)
+        );
     }
 
     public function countActivas()

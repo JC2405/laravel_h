@@ -23,6 +23,7 @@ class updateFuncionarioRequest extends FormRequest
     {
         return [
              'nombre'=>'required|string|max:255',
+             'apellido'=> 'required|string|max:255',
             'documento'=>'required|string|max:255',
             'correo'=>'required|string|max:255',
             'telefono'=>'required|string|max:255',

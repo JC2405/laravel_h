@@ -20,10 +20,18 @@ return new class extends Migration
            $table->string('estado',20)->default('Activo');
             $table->string('modalidad', 30);
             $table->unsignedInteger('idPrograma');
+            $table->unsignedInteger('idMunicipio');
  
             $table->foreign('idPrograma', 'fkFichaPrograma')
                   ->references('idPrograma')->on('programa')
-                  ->onUpdate('cascade');
+                  ->onUpdate('cascade');  
+
+          
+
+            $table->foreign('idMunicipio', 'fkFichaMunicipio')
+                ->references('idMunicipio')
+                ->on('municipio')
+                ->onUpdate('cascade');     
          });
     }
 
