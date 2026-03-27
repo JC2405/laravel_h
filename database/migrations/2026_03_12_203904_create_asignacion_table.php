@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('modalidad',255);
             $table->string('estado',20)->default('Activo');
  
-            $table->foreign('idFuncionario', 'fkAsigFuncionario')
+                $table->foreign('idFuncionario', 'fkAsigFuncionario')
                   ->references('idFuncionario')->on('funcionario')
                   ->onUpdate('cascade');
  

@@ -73,6 +73,7 @@ class AprendicesImport implements
                 // Datos a insertar o actualizar
                 [
                     'nombre'   => trim($filaActual['nombre']   ?? ''),
+                    'apellido' => trim($filaActual['apellido'] ?? ''),
                     'correo'   => trim($filaActual['correo']   ?? ''),
                     'telefono' => trim($filaActual['telefono'] ?? ''),
                     'estado'   => trim($filaActual['estado']   ?? 'Activo'),
@@ -93,6 +94,7 @@ class AprendicesImport implements
     {
         return [
             'nombre'    => 'required|string|max:140',
+            'apellido' => 'required|string|max:140',
             'documento' => 'required|string|max:40',
             'correo'    => 'required|email|max:160',
             'telefono'  => 'nullable|string|max:40',
@@ -104,6 +106,7 @@ class AprendicesImport implements
     {
         return [
             'nombre.required'    => 'La columna "nombre" es obligatoria.',
+            'apellido.required' => 'La columna "apellido" es obligatoria',
             'documento.required' => 'La columna "documento" es obligatoria.',
             'correo.required'    => 'La columna "correo" es obligatoria.',
             'correo.email'       => 'El correo ":input" no tiene formato válido.',

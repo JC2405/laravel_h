@@ -9,7 +9,15 @@ class AprendizModel extends Model
     protected $table = "aprendiz";
     protected $primaryKey = 'idAprendiz';
     public $timestamps = false;
-    protected $fillable = ['nombre','documento','correo','telefono','password','estado','idFicha'];
+    protected $fillable = [
+        'nombre',
+        'apellido',
+        'documento',
+        'correo',
+        'telefono',
+        'password',
+        'estado',
+        'idFicha'];
     public const PAGINATION = 10;
 
     public function ficha() {
