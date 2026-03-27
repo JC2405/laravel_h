@@ -161,54 +161,70 @@ class HorarioController extends Controller
      */
     public function enviarHorarioAprendiz(int $idFicha)
     {
-        // Obtener las asignaciones de la ficha con todas las relaciones
-        $asignacionesDeLaFicha = AsignacionModel::with([
-                'bloque.dias',
-                'funcionario',
-                'ambiente',
-                'ficha.programa',
-            ])
-            ->where('idFicha', $idFicha)
-            ->orderByDesc('idAsignacion')
-            ->get();
- 
-        // ✅ Construir la grilla que PERMITE múltiples clases por franja-día
-        $resultado = [
-            'ok'           => true,
-            'asignaciones' => $asignacionesDeLaFicha,
-            'grilla'       => $this->servicioAsignaciones->construirGrillaParaAprendices($asignacionesDeLaFicha),
-        ];
- 
-        // Obtener los aprendices de la ficha
-        $aprendices = AprendizModel::where('idficha', $idFicha)->get();
- 
-        // Enviar correo a cada aprendiz
-        foreach ($aprendices as $aprendiz) {
-            Mail::to($aprendiz->correo)
-                ->send(new HorarioAprendizMail($resultado, $aprendiz));
+        try {
+            // Obtener las asignaciones de la ficha con todas las relaciones
+            $asignacionesDeLaFicha = AsignacionModel::with([
+                    'bloque.dias',
+                    'funcionario',
+                    'ambiente',
+                    'ficha.programa',
+                ])
+                ->where('idFicha', $idFicha)
+                ->orderByDesc('idAsignacion')
+                ->get();
+     
+            // ✅ Construir la grilla que PERMITE múltiples clases por franja-día
+            $resultado = [
+                'ok'           => true,
+                'asignaciones' => $asignacionesDeLaFicha,
+                'grilla'       => $this->servicioAsignaciones->construirGrillaParaAprendices($asignacionesDeLaFicha),
+            ];
+     
+            // Obtener los aprendices de la ficha
+            $aprendices = AprendizModel::where('idficha', $idFicha)->get();
+     
+            // Enviar correo a cada aprendiz
+            foreach ($aprendices as $aprendiz) {
+                Mail::to($aprendiz->correo)
+                    ->send(new HorarioAprendizMail($resultado, $aprendiz));
+            }
+     
+            return response()->json([
+                'ok' => true,
+                'mensaje' => 'Correos enviados correctamente.',
+                'aprendices_notificados' => $aprendices->count()
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'ok' => false,
+                'mensaje' => 'Error al enviar correos: ' . $e->getMessage()
+            ], 500);
         }
- 
-        return response()->json([
-            'ok' => true,
-            'mensaje' => 'Correos enviados correctamente.',
-            'aprendices_notificados' => $aprendices->count()
-        ]);
     }
 
 
     public function enviarHorario(int $idFuncionario)
     {
-        $horario = $this->servicioAsignaciones->listarClasesPorInstructor($idFuncionario);
- 
-        // Buscar el funcionario para tener su correo
-        $funcionario = FuncionarioModel::findOrFail($idFuncionario);
- 
-        // Enviar el correo — $horario llega a la vista como $horario['grilla']
-        Mail::to($funcionario->correo)
-        //Mail::to('chaparrobarrerajulian@gmail.com')
-            ->send(new HorarioInstructorMail($horario));
- 
-        return response()->json(['ok' => true, 'mensaje' => 'Correo enviado correctamente.']);
+        try {
+            $horario = $this->servicioAsignaciones->listarClasesPorInstructor($idFuncionario);
+     
+            // Buscar el funcionario para tener su correo
+            $funcionario = FuncionarioModel::findOrFail($idFuncionario);
+     
+            // Enviar el correo — $horario llega a la vista como $horario['grilla']
+            Mail::to($funcionario->correo)
+                ->send(new HorarioInstructorMail($horario));
+     
+            return response()->json([
+                'ok' => true, 
+                'mensaje' => 'Correo enviado correctamente.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'ok' => false,
+                'mensaje' => 'Error al enviar correo del instructor: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
 
