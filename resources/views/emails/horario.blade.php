@@ -209,7 +209,26 @@
         <div>
             <div class="header-eyebrow">Servicio Nacional de Aprendizaje</div>
             <h1>Horario Semanal</h1>
-            <div class="header-sub">Asignación de clases &middot; Semana en curso</div>
+            @php
+                $fechasInicio = [];
+                $fechasFin = [];
+                foreach ($horario['clases'] ?? [] as $clase) {
+                    $fi = $clase->bloque->fechaInicio ?? $clase['bloque']['fechaInicio'] ?? $clase->fechaInicio ?? $clase['fechaInicio'] ?? null;
+                    $ff = $clase->bloque->fechaFin ?? $clase['bloque']['fechaFin'] ?? $clase->fechaFin ?? $clase['fechaFin'] ?? null;
+                    if ($fi) $fechasInicio[] = $fi;
+                    if ($ff) $fechasFin[] = $ff;
+                }
+                $minFecha = count($fechasInicio) > 0 ? min($fechasInicio) : null;
+                $maxFecha = count($fechasFin) > 0 ? max($fechasFin) : null;
+            @endphp
+            <div class="header-sub">
+                Asignación de clases &middot; 
+                @if($minFecha && $maxFecha)
+                    Vigente del {{ \Carbon\Carbon::parse($minFecha)->format('d/m/Y') }} al {{ \Carbon\Carbon::parse($maxFecha)->format('d/m/Y') }}
+                @else
+                    Semana en curso
+                @endif
+            </div>
         </div>
         <div class="header-badge">
             <div class="label">Generado</div>
