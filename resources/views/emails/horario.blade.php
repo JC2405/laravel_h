@@ -222,7 +222,7 @@
                 $maxFecha = count($fechasFin) > 0 ? max($fechasFin) : null;
             @endphp
             <div class="header-sub">
-                Asignación de clases &middot; 
+                Asignación de clases &middot; <br>
                 @if($minFecha && $maxFecha)
                     Vigente del {{ \Carbon\Carbon::parse($minFecha)->format('d/m/Y') }} al {{ \Carbon\Carbon::parse($maxFecha)->format('d/m/Y') }}
                 @else
