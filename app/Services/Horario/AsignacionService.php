@@ -213,6 +213,7 @@ class AsignacionService
             'fechaFin'      => $datos['fechaFinPeriodo'],
             'horaInicio'    => $datos['horaInicioClase'],
             'horaFin'       => $datos['horaFinClase'],
+            'tipoFormacion' => $datos['tipoFormacion'],
             'estado'        => $datos['estado'],
             'observaciones' => $datos['observaciones'],
         ]);
@@ -304,6 +305,7 @@ class AsignacionService
             'idAmbiente'         => $datos['idAmbiente']      ?? $datos['id_ambiente']       ?? null,
             'modalidad'          => $datos['modalidad']                                      ?? null,
             'estado'             => $datos['estado']                                         ?? 'activo',
+            'tipoFormacion'      => $datos['tipoFormacion']   ?? $datos['tipoFormacion']     ?? null,
             'observaciones'      => $datos['observaciones']   ?? $datos['observacion']       ?? null,
             'diasDeLaSemana'     => $datos['dias']                                           ?? [],
             'fechaInicioPeriodo' => $datos['fechaInicio']     ?? $datos['fecha_inicio']      ?? null,

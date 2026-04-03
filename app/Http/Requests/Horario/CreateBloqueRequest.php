@@ -13,6 +13,7 @@ class CreateBloqueRequest extends FormRequest
             'fechaFin'        => 'required|date_format:H:i:s|after:hora_inicio',
             'horaInicio'       => 'required|string|max:255',
             'horaFin' => 'required|string|max:255',
+            'tipoFormacion' => 'required|string|max150',
             'estado'      => 'nullable|integer|exists:ambiente,idAmbiente',
             'observaciones'   => 'required|integer|exists:funcionario,idFuncionario',
             'idAsignacion'         => 'nullable|integer|exists:asignacion,idAsignacion',

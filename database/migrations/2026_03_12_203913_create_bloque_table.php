@@ -19,6 +19,7 @@ return new class extends Migration
             $table->time('horaInicio');
             $table->time('horaFin');
             $table->string('estado',20)->default('Activo');
+            $table->string('tipoFormacion',150);
             $table->string('observaciones', 255)->nullable();
 
  

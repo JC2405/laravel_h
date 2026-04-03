@@ -23,8 +23,9 @@ class CreateAsignacionRequest extends FormRequest
             'fechaFin'       => 'required|date|after_or_equal:fechaInicio',
             'horaInicio'     => 'required|date_format:H:i,H:i:s',
             'horaFin'        => 'required|date_format:H:i,H:i:s|after:horaInicio',
-            'observaciones'  => 'nullable|string|max:500',
-            'tipoDeFormacion'=> 'nullable|string|max:100',
+            'tipoFormacion'  => 'required|string|max:150',
+            'observaciones'  => 'nullable|string|max:255',
+            'tipoDeFormacion'=> 'nullable|string|max:255',
 
             // ── Días ─────────────────────────────────────────────────────
             'dias'           => 'required|array|min:1',
