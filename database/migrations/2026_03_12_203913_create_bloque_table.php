@@ -20,6 +20,7 @@ return new class extends Migration
             $table->time('horaFin');
             $table->string('estado',20)->default('Activo');
             $table->string('observaciones', 255)->nullable();
+
  
             $table->foreign('idAsignacion', 'fkBloqueAsignacion')
                   ->references('idAsignacion')->on('asignacion')

@@ -50,11 +50,14 @@ class FichaService
         return FichaModel::where('codigoFicha', $codigoFicha)->firstOrFail();
     }
 
+
     public function countActivas(): int
     {
         $count = FichaModel::where('estado', '!=', 'Inactivo')->count();
         return $count > 0 ? $count : FichaModel::count();
     }
+
+    
 
     // ── Flujo jerárquico: Municipio → Programa → Ficha ────────────────────────
 
@@ -82,5 +85,21 @@ class FichaService
             ->where('idMunicipio', $idMunicipio)
             ->where('estado',      'Activo')
             ->get();
+    }
+
+
+    public function verificarEstadoFicha(int $idFicha): array
+    {
+        $ficha = FichaModel::find($idFicha);
+    
+        if (!$ficha) {
+            return ['ok' => false, 'mensaje' => 'Ficha no encontrada'];
+        }
+    
+        if ($ficha->estado !== 'InActivo') {
+            return ['ok' => false, 'mensaje' => 'La ficha no está inactiva'];
+        }
+    
+        return ['ok' => true, 'ficha' => $ficha];
     }
 }
