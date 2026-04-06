@@ -80,7 +80,7 @@ class FichaService
      */
     public function obtenerFichasPorProgramaMunicipio(int $idPrograma, int $idMunicipio): \Illuminate\Database\Eloquent\Collection
     {
-        return FichaModel::with(['programa.tipoFormacion', 'municipio', 'asignaciones'])
+        return FichaModel::with(['programa.tipoFormacion', 'municipio', 'asignaciones.bloque'])
             ->where('idPrograma',  $idPrograma)
             ->where('idMunicipio', $idMunicipio)
             ->where('estado',      'Activo')
@@ -96,7 +96,7 @@ class FichaService
             return ['ok' => false, 'mensaje' => 'Ficha no encontrada'];
         }
     
-        if ($ficha->estado !== 'InActivo') {
+        if ($ficha->estado !== 'Activo') {
             return ['ok' => false, 'mensaje' => 'La ficha no está inactiva'];
         }
     

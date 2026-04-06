@@ -16,6 +16,7 @@ class BloqueHorarioModel extends Model
         'horaFin',
         'estado',
         'observaciones',
+        'tipoFormacion',
     ];
 
     public const PAGINATION = 10;
