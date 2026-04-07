@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Horario\CreateAsignacionRequest;
 use App\Services\Horario\AsignacionService;
 use App\Services\Horario\MailService;
+use Illuminate\Http\Request;
 
 class HorarioController extends Controller
 {
@@ -121,23 +122,63 @@ class HorarioController extends Controller
     // CORREOS
     // ================================
 
-    public function enviarHorarioAprendiz(int $idFicha)
+    /**
+     * POST /api/enviarHorarioAprendiz/{idFicha}
+     *
+     * Body JSON opcional:
+     *   { "fechaInicio": "2025-01-01", "fechaFin": "2025-06-30" }
+     *
+     * Si no se envía el body, se notifican TODAS las asignaciones de la ficha.
+     */
+    public function enviarHorarioAprendiz(int $idFicha, Request $request)
     {
-        $res = $this->mail->enviarHorarioAprendiz($idFicha);
+        // Validar fechas solo si se envían
+        $request->validate([
+            'fechaInicio' => 'nullable|date',
+            'fechaFin'    => 'nullable|date|after_or_equal:fechaInicio',
+        ], [
+            'fechaFin.after_or_equal' => 'La fecha fin debe ser igual o posterior a la fecha de inicio.',
+        ]);
+
+        $res = $this->mail->enviarHorarioAprendiz(
+            $idFicha,
+            $request->input('fechaInicio'),
+            $request->input('fechaFin')
+        );
 
         if (!$res['ok']) {
-            return $this->error($res['mensaje'], 500);
+            return $this->error($res['mensaje'], 422);
         }
 
         return $this->success($res, 'Correos enviados');
     }
 
-    public function enviarHorario(int $idFuncionario)
+    /**
+     * POST /api/enviarHorario/{idFuncionario}
+     *
+     * Body JSON opcional:
+     *   { "fechaInicio": "2025-01-01", "fechaFin": "2025-06-30" }
+     *
+     * Si no se envía el body, se notifica el horario completo del instructor.
+     */
+    public function enviarHorario(int $idFuncionario, Request $request)
     {
-        $res = $this->mail->enviarHorarioInstructor($idFuncionario);
+        // Validar fechas solo si se envían
+        $request->validate([
+            'fechaInicio' => 'nullable|date',
+            'fechaFin'    => 'nullable|date|after_or_equal:fechaInicio',
+        ], [
+            'fechaFin.after_or_equal' => 'La fecha fin debe ser igual o posterior a la fecha de inicio.',
+        ]);
+
+        $res = $this->mail->enviarHorarioInstructor(
+            $idFuncionario,
+            $request->input('fechaInicio'),
+            $request->input('fechaFin')
+        );
 
         if (!$res['ok']) {
-            return $this->error($res['mensaje'], 500);
+            return $this->error($res['mensaje'], 422);
         }
 
         return $this->success($res, 'Correo enviado');

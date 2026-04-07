@@ -19,13 +19,43 @@ class MailService
         'bloque.dias', 'funcionario', 'ambiente', 'ficha.programa',
     ];
 
-    public function enviarHorarioAprendiz(int $idFicha): array
+    /**
+     * Envía el horario a todos los aprendices de una ficha.
+     *
+     * @param int         $idFicha
+     * @param string|null $fechaInicio  Filtro opcional: solo bloques que inician >= esta fecha (Y-m-d)
+     * @param string|null $fechaFin     Filtro opcional: solo bloques que terminan  <= esta fecha (Y-m-d)
+     */
+    public function enviarHorarioAprendiz(int $idFicha, ?string $fechaInicio = null, ?string $fechaFin = null): array
     {
-        return $this->intentar(function () use ($idFicha) {
-            $asignaciones = AsignacionModel::with(self::RELACIONES)
+        return $this->intentar(function () use ($idFicha, $fechaInicio, $fechaFin) {
+
+            $query = AsignacionModel::with(self::RELACIONES)
                 ->where('idFicha', $idFicha)
-                ->orderByDesc('idAsignacion')
-                ->get();
+                ->orderByDesc('idAsignacion');
+
+            // Filtrar por rango de fechas del bloque si se proporcionaron
+            // Usamos lógica de solapamiento: un bloque se incluye si se cruza
+            // con el rango solicitado (fechaInicio <= rangoFin AND fechaFin >= rangoInicio)
+            if ($fechaInicio || $fechaFin) {
+                $query->whereHas('bloque', function ($q) use ($fechaInicio, $fechaFin) {
+                    if ($fechaInicio) {
+                        $q->where('fechaFin', '>=', $fechaInicio);
+                    }
+                    if ($fechaFin) {
+                        $q->where('fechaInicio', '<=', $fechaFin);
+                    }
+                });
+            }
+
+            $asignaciones = $query->get();
+
+            if ($asignaciones->isEmpty()) {
+                return [
+                    'ok'      => false,
+                    'mensaje' => 'No hay asignaciones para el rango de fechas indicado.',
+                ];
+            }
 
             $resultado = [
                 'ok'           => true,
@@ -33,26 +63,79 @@ class MailService
                 'grilla'       => $this->grillaService->construirGrillaParaAprendices($asignaciones),
             ];
 
-            $aprendices = AprendizModel::where('idficha', $idFicha)->get();
-            $aprendices->each(fn($a) => Mail::to($a->correo)->send(new HorarioAprendizMail($resultado, $a)));
+            $aprendices = AprendizModel::where('idFicha', $idFicha)->get();
 
-            return ['ok' => true, 'mensaje' => 'Correos enviados correctamente.', 'total' => $aprendices->count()];
+            if ($aprendices->isEmpty()) {
+                return [
+                    'ok'      => false,
+                    'mensaje' => 'La ficha no tiene aprendices registrados.',
+                ];
+            }
+
+            $aprendices->each(
+                fn($a) => Mail::to($a->correo)->send(new HorarioAprendizMail($resultado, $a))
+            );
+
+            return [
+                'ok'      => true,
+                'mensaje' => 'Correos enviados correctamente.',
+                'total'   => $aprendices->count(),
+            ];
         });
     }
 
-    public function enviarHorarioInstructor(int $idFuncionario): array
+    /**
+     * Envía el horario al correo del instructor.
+     *
+     * @param int         $idFuncionario
+     * @param string|null $fechaInicio   Filtro opcional (Y-m-d)
+     * @param string|null $fechaFin      Filtro opcional (Y-m-d)
+     */
+    public function enviarHorarioInstructor(int $idFuncionario, ?string $fechaInicio = null, ?string $fechaFin = null): array
     {
-        return $this->intentar(function () use ($idFuncionario) {
-            $funcionario = FuncionarioModel::findOrFail($idFuncionario);
-            $horario     = AsignacionModel::with(self::RELACIONES)
-                ->where('idFuncionario', $idFuncionario)
-                ->get();
+        return $this->intentar(function () use ($idFuncionario, $fechaInicio, $fechaFin) {
 
-            Mail::to($funcionario->correo)->send(new HorarioInstructorMail($horario));
+            $funcionario = FuncionarioModel::findOrFail($idFuncionario);
+
+            $query = AsignacionModel::with(self::RELACIONES)
+                ->where('idFuncionario', $idFuncionario);
+
+            // Filtrar por rango de fechas del bloque si se proporcionaron
+            // Usamos lógica de solapamiento: un bloque se incluye si se cruza
+            // con el rango solicitado (fechaInicio <= rangoFin AND fechaFin >= rangoInicio)
+            if ($fechaInicio || $fechaFin) {
+                $query->whereHas('bloque', function ($q) use ($fechaInicio, $fechaFin) {
+                    if ($fechaInicio) {
+                        $q->where('fechaFin', '>=', $fechaInicio);
+                    }
+                    if ($fechaFin) {
+                        $q->where('fechaInicio', '<=', $fechaFin);
+                    }
+                });
+            }
+
+            $horario = $query->get();
+
+            if ($horario->isEmpty()) {
+                return [
+                    'ok'      => false,
+                    'mensaje' => 'No hay asignaciones para el rango de fechas indicado.',
+                ];
+            }
+
+            // Construir el payload que espera la vista emails/horario.blade.php
+            $payload = [
+                'clases' => $horario,
+                'grilla' => $this->grillaService->construirGrillaParaInstructor($horario),
+            ];
+
+            Mail::to($funcionario->correo)->send(new HorarioInstructorMail($payload));
 
             return ['ok' => true, 'mensaje' => 'Correo enviado correctamente.'];
         });
     }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
 
     private function intentar(callable $accion): array
     {

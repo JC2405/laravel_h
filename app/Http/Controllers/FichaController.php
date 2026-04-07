@@ -7,11 +7,12 @@ use App\Http\Requests\Ficha\createFichaRequest;
 use App\Http\Requests\Ficha\updateFichaRequest;
 use App\Models\FichaModel;
 use App\Services\Ficha\FichaService;
+use App\Services\Horario\AsignacionService;
 use Illuminate\Http\Request;
 
 class FichaController extends Controller
 {
-    public function __construct(protected FichaService $service) {
+    public function __construct(protected FichaService $service, protected AsignacionService $services) {
     }
 
 
@@ -33,12 +34,31 @@ class FichaController extends Controller
         return response()->json($crearFicha);
     }
 
-    public function update(updateFichaRequest $request , $idFicha)
-    {
-        $editarFicha = FichaModel::findOrFail($idFicha);
-        $this->service->update($editarFicha,$request->validated());
-        return response()->json($editarFicha);
-    }
+
+
+    public function update(UpdateFichaRequest $request, $idFicha)
+{
+    $editarFicha = FichaModel::findOrFail($idFicha);
+     $this->service->update($editarFicha, $request->validated());
+    //$estadoAnterior = $editarFicha->estado; 
+//
+   //
+//
+    //$estadoNuevo = $editarFicha->estado;
+//
+    //
+    //if ($estadoAnterior === 'Activo' && $estadoNuevo === 'Inactivo') {
+    //    $res = $this->services->eliminarHorarioPorEstadoFicha($idFicha);
+//
+    //    if (!$res['ok']) {
+    //        return response()->json([
+    //            'message' => $res['mensaje']
+    //        ], $res['http'] ?? 422);
+    //    }
+    //}
+//
+    //return response()->json($editarFicha);
+}
 
     public function destroy($idFicha)
     {

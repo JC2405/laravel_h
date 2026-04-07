@@ -88,18 +88,21 @@ class FichaService
     }
 
 
-    public function verificarEstadoFicha(int $idFicha): array
-    {
-        $ficha = FichaModel::find($idFicha);
-    
-        if (!$ficha) {
-            return ['ok' => false, 'mensaje' => 'Ficha no encontrada'];
-        }
-    
-        if ($ficha->estado !== 'Activo') {
-            return ['ok' => false, 'mensaje' => 'La ficha no está inactiva'];
-        }
-    
-        return ['ok' => true, 'ficha' => $ficha];
+   public function verificarEstadoFicha(int $idFicha): array
+{
+    $ficha = FichaModel::find($idFicha);
+
+    if (!$ficha) {
+        return ['ok' => false, 'mensaje' => 'Ficha no encontrada'];
+    }
+
+    if ($ficha->estado !== 'Inactivo') {
+        return [
+            'ok' => false,
+            'mensaje' => 'La ficha debe estar inactiva para eliminar el horario'
+        ];
+    }
+
+    return ['ok' => true];
     }
 }

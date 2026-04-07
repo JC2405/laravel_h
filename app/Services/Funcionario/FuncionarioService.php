@@ -77,5 +77,21 @@ class FuncionarioService
     }
 
 
+    public function verificarEstadoPorInstructor(int $idFuncionario):array
+    {
+        $funcionario = FuncionarioModel::find($idFuncionario);
+        if(!$funcionario){
+            return ['ok' => false, 'mensaje' => 'Funcionario No encontrado'];
+        }
+        if ($funcionario->estado != 'INACTIVO'){
+            return [
+                'ok' => false,
+                'mensaje' => 'El funcionario debe estar Inactivo para poder eliminar el Horario.'
+            ];
+        }
+        return['ok' => true];
+    }
+
+    
    
 }

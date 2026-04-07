@@ -5,6 +5,7 @@ namespace App\Services\Horario;
 use App\Models\AsignacionModel;
 use App\Models\BloqueHorarioModel;
 use App\Services\Ficha\FichaService;
+use App\Services\Funcionario\FuncionarioService;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
 use Throwable;
@@ -15,6 +16,7 @@ class AsignacionService
         protected DeteccionConflictoService $conflictos,
         protected FichaService $fichaService,
         protected GrillaService $grillaService,
+        protected FuncionarioService $funcionarioService,
     ) {}
 
     // ================================
@@ -26,10 +28,7 @@ class AsignacionService
 
         $error = $this->validar($datos);
         if ($error) return $error;
-
-        $verificacion = $this->fichaService->verificarEstadoFicha($datos['idFicha']);
-        if (!$verificacion['ok']) return $verificacion;
-
+    
         try {
             $asignacion = DB::transaction(function () use ($datos) {
 
@@ -110,6 +109,15 @@ class AsignacionService
             });
     }
 
+
+    public function eliminarHorarioPorEstadoFuncionario(int $idFuncionario):array
+    {
+        $verificacion = $this->funcionarioService->verificarEstadoPorInstructor($idFuncionario);
+
+        if (!$verificacion['ok']) return $verificacion;
+        DB::transaction(fn()=> $this->eliminarAsignacionesYBloques($idFuncionario));
+        return ['ok' => true, 'mensaje' => 'horario Eliminado Correctamente'];
+    } 
     // ================================
     // ELIMINAR DÍA DE BLOQUE
     // ================================

@@ -4,14 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Funcionario\createFuncionarioRequest;
 use App\Http\Requests\Funcionario\updateFuncionarioRequest;
+use App\Models\AsignacionModel;
 use App\Models\FuncionarioModel;
 use App\Services\Funcionario\FuncionarioService;
+use App\Services\Horario\AsignacionService;
 use Illuminate\Http\Request;
 
 class FuncionarioController extends Controller
 {
 
-    public function __construct(protected FuncionarioService $service) {}
+    public function __construct(protected FuncionarioService $service,protected AsignacionService $services,) {}
     /**
      * Display a listing of the resource.
      */
@@ -56,8 +58,23 @@ class FuncionarioController extends Controller
     public function update(updateFuncionarioRequest $request, $idFuncionario)
     {
         $editarFuncionario = FuncionarioModel::findOrFail($idFuncionario);
-        $this->service->update($editarFuncionario, $request ->validated());
-        return response()->json($editarFuncionario->fresh());
+
+         $this->service->update($editarFuncionario, $request ->validated());
+       // $estadoAnterior = $editarFuncionario->estado;
+    //
+       //
+//
+      // // $estadoNuevo = $editarFuncionario->estado;
+//
+     //  // if($estadoAnterior === 'ACTIVO' && $estadoNuevo === 'INACTIVO'){
+       ////     $respuesta = $this->services->eliminarHorarioPorEstadoFuncionario($idFuncionario);
+//
+         //   if (!$respuesta['ok']) {
+         //       return response()->json([
+         //           'message' => $respuesta['mensaje']
+         //       ], $respuesta['http'] ?? 422);
+         //   }
+        //
     }
 
     /**
