@@ -64,7 +64,7 @@ Route::get('programas-por-municipio/{idMunicipio}',                        [Fich
 Route::get('fichas-por-programa-municipio/{idPrograma}/{idMunicipio}',     [FichaController::class,'fichasPorProgramaMunicipio']);
 
 Route::get('listarProgramasPorSede/{idSede}',[FichaController::class,'programasPorSede']);
-Route::get('fichasPorProgramaSede/{idPrograma}/{idMunicipio}',[FichaController::class,'fichasPorProgramaSede']);
+Route::get('fichasPorProgramaSede/{idPrograma}/{idMunicipio}',[FichaController::class,'ficharPorProgramaSede']);
 
 
 Route::get('listarSedes',[SedeController::class,'index']);
