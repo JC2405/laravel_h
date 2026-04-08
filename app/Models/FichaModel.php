@@ -9,7 +9,7 @@ class FichaModel extends Model
     protected $table = 'ficha';
     protected $primaryKey = 'idFicha';
     public $timestamps = false;
-    protected $fillable = ['codigoFicha','jornada','fechaInicio','fechaFin','estado','modalidad','idPrograma','idMunicipio'];
+    protected $fillable = ['codigoFicha','jornada','fechaInicio','fechaFin','estado','modalidad','idPrograma','idSede'];
     public const PAGINATION = 10;
 
     public function programa() {
@@ -22,7 +22,7 @@ class FichaModel extends Model
     public function asignaciones() {
         return $this->hasMany(AsignacionModel::class, 'idFicha', 'idFicha');
     }
-    public function municipio(){
-        return $this->belongsTo(MunicipioModel::class, 'idMunicipio' , 'idMunicipio');
+    public function Sede(){
+        return $this->belongsTo(SedeModel::class, 'idSede', 'idSede');
     }
 }

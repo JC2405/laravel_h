@@ -22,4 +22,8 @@ namespace App\Models;
         public function municipio() {
         return $this->belongsTo(MunicipioModel::class, 'idMunicipio', 'idMunicipio');
         }
+
+        public function fichas() {
+        return $this->hasMany(FichaModel::class, 'idSede', 'idSede');
+        }
     }

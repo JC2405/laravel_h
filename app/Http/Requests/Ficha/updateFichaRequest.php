@@ -29,7 +29,7 @@ class updateFichaRequest extends FormRequest
             'estado'       => 'required|string|max:255',
             'modalidad'    => 'required|string|max:255',
             'idPrograma'   => 'required|integer',
-            'idMunicipio'  => 'required|integer|exists:municipio,idMunicipio',
+            'idSede'  => 'required|integer|exists:Sede,idSede',
         ];
     }
 }
