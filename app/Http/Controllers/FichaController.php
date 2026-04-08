@@ -84,6 +84,16 @@ class FichaController extends Controller
         );
     }
 
+
+
+    public function programasPorSede($idSede)
+    {
+        return response()->json(
+                $this->service->obtenerProgramasPorSede((int)$idSede)
+        );
+    }
+
+
     /**
      * GET /api/fichas-por-programa-municipio/{idPrograma}/{idMunicipio}
      * Devuelve las fichas activas que corresponden al programa y municipio dados.
@@ -92,6 +102,15 @@ class FichaController extends Controller
     {
         return response()->json(
             $this->service->obtenerFichasPorProgramaMunicipio((int) $idPrograma, (int) $idMunicipio)
+        );
+    }
+
+
+
+    public function ficharPorProgramaSede($idPrograma, $idSede)
+    {
+        return response()->json(
+            $this->service->obtenerFichasPorProgramaSede((int) $idPrograma, (int) $idSede)
         );
     }
 

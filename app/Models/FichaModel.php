@@ -22,7 +22,7 @@ class FichaModel extends Model
     public function asignaciones() {
         return $this->hasMany(AsignacionModel::class, 'idFicha', 'idFicha');
     }
-    public function Sede(){
+    public function sede(){
         return $this->belongsTo(SedeModel::class, 'idSede', 'idSede');
     }
 }
