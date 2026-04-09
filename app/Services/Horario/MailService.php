@@ -135,9 +135,9 @@ class MailService
         });
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    // ── AYUDAS ───────────────────────────────────────────────────────────────
 
-    private function intentar(callable $accion): array
+    public function intentar(callable $accion): array
     {
         try {
             return $accion();

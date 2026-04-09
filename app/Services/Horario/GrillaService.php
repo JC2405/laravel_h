@@ -102,6 +102,9 @@ class GrillaService
             }
         }
 
+        $grilla = array_filter($grilla, fn($celdas) => !empty($celdas));
+
+
         return $grilla;
     }
 

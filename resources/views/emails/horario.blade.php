@@ -263,12 +263,8 @@
             $grilla = $horario['grilla'] ?? [];
             $dias   = ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado'];
 
-            $grillaNeta = array_filter($grilla, function ($celdas) use ($dias) {
-                foreach ($dias as $d) {
-                    if (!empty($celdas[$d])) return true;
-                }
-                return false;
-            });
+            // DESPUÉS — más simple y seguro
+              $grillaNeta = array_filter($grilla, fn($celdas) => !empty($celdas));
         @endphp
 
         <table>
@@ -310,7 +306,6 @@
                 </tr>
                 @empty
                 <tr class="empty-row">
-                    {{-- CORRECCIÓN: colspan debe ser 7 (franja + 6 días) --}}
                     <td colspan="7">No hay clases asignadas para esta semana.</td>
                 </tr>
                 @endforelse
