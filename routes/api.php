@@ -122,10 +122,11 @@ Route::post('crearBloque',[HorarioController::class, 'storeBloque']);
 
 Route::post('crearAsignacion',[HorarioController::class, 'storeAsignacion']);
 Route::get('horariosPorFicha/{idFicha}',[HorarioController::class, 'horariosPorFicha']);
+
 Route::delete('eliminarAsignacion/{idAsignacion}',[HorarioController::class, 'destroyAsignacion']);
 Route::delete('eliminarDiaDeBloque/{idBloque}/{idDia}', [HorarioController::class, 'destroyDiaDeBloque']);
 
-
+Route::get('horariosPorAmbiente/{idAmbiente}',[HorarioController::class,'horariosPorAmbiente']);
 Route::get('horarioPorInstructor/{idFuncionario}',[HorarioController::class,'listarFuncionarioPorHorario']); 
 
 Route::get('exportar/funcionarios',                [ExcelController::class, 'exportarFuncionarios']);
@@ -161,19 +162,13 @@ Route::get('exportar/resultados/{idTipoFormacion?}', [ExcelController::class, 'e
 Route::post('importar/resultados', [ExcelController::class, 'importarResultados']);
 
 // ── Juicios evaluativos ──────────────────────────────────────────────────────
-
 // Análisis rápido (solo Excel, sin BD) — usado por HorarioTitulada (Transversales)
 Route::post('analizar/juicios',                  [ReporteController::class, 'analizarJuicios']);
-
 // Análisis completo (Excel + BD: competencias y resultados) — usado por HorarioFormativa
 Route::post('reportes/competencias-pendientes',  [ReporteController::class, 'generarReporteCompetencias']);
 
 // Descarga un .txt de reporte ya generado
 Route::get('reportes/descargar/{nombre}',        [ReporteController::class, 'descargarReporte']);
-
-
 Route::post('/enviarHorario/{id}', [HorarioController::class, 'enviarHorario']);
-
-
 Route::post('enviarHorarioAprendiz/{id}',[HorarioController::class,'enviarHorarioAprendiz']);
 

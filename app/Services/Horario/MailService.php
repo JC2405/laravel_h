@@ -22,9 +22,9 @@ class MailService
     /**
      * Envía el horario a todos los aprendices de una ficha.
      *
-     * @param int         $idFicha
-     * @param string|null $fechaInicio  Filtro opcional: solo bloques que inician >= esta fecha (Y-m-d)
-     * @param string|null $fechaFin     Filtro opcional: solo bloques que terminan  <= esta fecha (Y-m-d)
+     * $idFicha
+     * $fechaInicio  Filtro opcional: solo bloques que inician >= esta fecha (Y-m-d)
+     * $fechaFin     Filtro opcional: solo bloques que terminan  <= esta fecha (Y-m-d)
      */
     public function enviarHorarioAprendiz(int $idFicha, ?string $fechaInicio = null, ?string $fechaFin = null): array
     {
@@ -87,9 +87,9 @@ class MailService
     /**
      * Envía el horario al correo del instructor.
      *
-     * @param int         $idFuncionario
-     * @param string|null $fechaInicio   Filtro opcional (Y-m-d)
-     * @param string|null $fechaFin      Filtro opcional (Y-m-d)
+     * $idFuncionario
+     * $fechaInicio   Filtro opcional (Y-m-d)
+     * $fechaFin      Filtro opcional (Y-m-d)
      */
     public function enviarHorarioInstructor(int $idFuncionario, ?string $fechaInicio = null, ?string $fechaFin = null): array
     {

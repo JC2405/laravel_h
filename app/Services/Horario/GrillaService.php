@@ -4,7 +4,7 @@ namespace App\Services\Horario;
 
 class GrillaService
 {
-    private const RELACIONES = [
+    public const RELACIONES = [
         'bloque.dias', 'funcionario', 'ambiente', 'ficha.programa',
     ];
 
@@ -13,6 +13,23 @@ class GrillaService
         return $this->construirGrilla($asignaciones, function ($asignacion, $bloque) {
             return [
                 'ficha'        => $asignacion->ficha?->numero ?? '—',
+                'programa'     => $asignacion->ficha?->programa?->nombre ?? '—',
+                'instructor'   => $asignacion->funcionario?->nombre ?? '—',
+                'ambiente'     => $this->formatearAmbiente($asignacion),
+                'modalidad'    => $asignacion->modalidad,
+                'fechaInicio'  => $bloque->fechaInicio,
+                'fechaFin'     => $bloque->fechaFin,
+                'idBloque'     => $bloque->idBloque,
+                'idAsignacion' => $asignacion->idAsignacion,
+            ];
+        });
+    }
+
+    public function construirGrillaParaAmbiente($asignaciones):array
+    {
+        return $this->construirGrilla($asignaciones, function($asignacion, $bloque){
+            return [
+                 'ficha'        => $asignacion->ficha?->numero ?? '—',
                 'programa'     => $asignacion->ficha?->programa?->nombre ?? '—',
                 'instructor'   => $asignacion->funcionario?->nombre ?? '—',
                 'ambiente'     => $this->formatearAmbiente($asignacion),
@@ -48,7 +65,7 @@ class GrillaService
             return [
                 'ficha'        => $asignacion->ficha ? 'Ficha ' . $asignacion->ficha->codigoFicha : '—',
                 'programa'     => $asignacion->ficha?->programa?->nombre ?? '—',
-                'ambiente'     => $asignacion->ambiente?->codigo ?? 'Virtual',
+                'ambiente'     => $asignacion->ambiente?->codigo ?? '-',
                 'modalidad'    => $asignacion->modalidad,
                 'fechaInicio'  => $bloque->fechaInicio,
                 'fechaFin'     => $bloque->fechaFin,
@@ -58,9 +75,9 @@ class GrillaService
         });
     }
 
-    // ── Privados ──────────────────────────────────────────────────────────────
+   
 
-    private function construirGrilla($asignaciones, callable $mapearCelda): array
+    public function construirGrilla($asignaciones, callable $mapearCelda): array
     {
         $franjas = $this->generarFranjasHorarias();
         $grilla  = array_fill_keys($franjas, []);
@@ -88,21 +105,33 @@ class GrillaService
         return $grilla;
     }
 
-    private function formatearAmbiente($asignacion): string
+
+
+    // Aqui se pone 
+    public function formatearAmbiente($asignacion): string
     {
         return $asignacion->ambiente
             ? $asignacion->ambiente->codigo . ' - No.' . ($asignacion->ambiente->numero ?? '')
-            : 'Virtual';
+            : '';
     }
 
-    private function generarFranjasHorarias(): array
+
+
+
+    //Espacio para poner franja desde que horas hasta que horas se genera la grilla
+    public function generarFranjasHorarias(): array
     {
         $franjas = [];
+
+        // Aqui se maneja el inicio de la grilla desde que horas hasta que horas // $hora es para partir horas de 2 en 2 
         for ($hora = 6; $hora < 24; $hora += 2) {
             $franjas[] = sprintf('%02d:00 - %02d:00', $hora, $hora + 2);
         }
         return $franjas;
     }
+
+
+
 
     private function bloqueSeSOlapaConFranja(string $franja, string $horaInicio, string $horaFin): bool
     {
@@ -112,3 +141,7 @@ class GrillaService
             && strtotime($horaFin)    > strtotime($inicioFranja);
     }
 }
+
+
+
+

@@ -187,6 +187,19 @@ class AsignacionService
         ];
     }
 
+
+    public function listarClasesPorAmbiente(int $idAmbiente): array
+    {
+        $asignaciones = AsignacionModel::with(['bloque.dias', 'funcionario' , 'ambiente', 'ficha.programa'])
+           ->where('idAmbiente', $idAmbiente)
+           ->get();
+           
+           return [
+                'ok' => true,
+                'asignaciones' => $asignaciones,
+                'grilla' => $this->grillaService->construirGrillaParaAmbiente($asignaciones),
+           ];
+    }
     // ================================
     // DASHBOARD
     // ================================

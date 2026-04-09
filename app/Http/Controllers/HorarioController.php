@@ -111,6 +111,14 @@ class HorarioController extends Controller
         return $this->success($res);
     }
 
+    public function horariosPorAmbiente(int $idAmbiente){
+
+        $res = $this->asignaciones->listarClasesPorAmbiente($idAmbiente);
+
+        return $this->success($res);
+    }
+
+
     public function dashboardMetrics()
     {
         return $this->success(
