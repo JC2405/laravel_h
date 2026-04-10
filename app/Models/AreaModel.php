@@ -11,7 +11,6 @@ class AreaModel extends Model
     protected $primaryKey = 'idArea';
     public $timestamps = false;
     protected $fillable = ['nombreArea'];
-    public const PAGINATION = 10;
     
     
 }

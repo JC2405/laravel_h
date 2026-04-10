@@ -10,7 +10,6 @@ class FichaModel extends Model
     protected $primaryKey = 'idFicha';
     public $timestamps = false;
     protected $fillable = ['codigoFicha','jornada','fechaInicio','fechaFin','estado','modalidad','idPrograma','idSede'];
-    public const PAGINATION = 10;
 
     public function programa() {
     return $this->belongsTo(ProgramaModel::class, 'idPrograma', 'idPrograma');

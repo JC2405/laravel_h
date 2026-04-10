@@ -3,14 +3,14 @@
 namespace App\Services\Ambiente;
 
 use App\Models\AmbienteModel;
-use Illuminate\Pagination\LengthAwarePaginator;
+
 use Illuminate\Support\Facades\DB;
 
 class AmbienteService
 {
-    public function getAll():LengthAwarePaginator
+    public function getAll()
     {
-        return AmbienteModel::with(['sede', 'area'])->orderBy('idAmbiente')->paginate(AmbienteModel::PAGINATION);
+        return AmbienteModel::with(['sede', 'area'])->orderBy('idAmbiente')->get();
     }
 
     public function countLibres(): int

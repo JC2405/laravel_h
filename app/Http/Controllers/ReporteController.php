@@ -32,20 +32,13 @@ class ReporteController extends Controller
         protected JuiciosEvaluativosService  $juiciosService
     ) {}
 
-    // =========================================================================
-    //  ANÁLISIS RÁPIDO — Solo Excel, sin BD
-    //  Usado por HorarioTitulada (Transversales)
-    // =========================================================================
+
 
     /**
      * POST /api/analizar/juicios
      *
      * Lee el Excel de juicios evaluativos y calcula porcentajes de aprobación
      * por resultado, SIN cruzar con la BD.
-     *
-     * Úsalo cuando NO necesitas comparar contra competencias registradas en BD,
-     * por ejemplo para el análisis rápido de Transversales en HorarioTitulada.
-     *
      * Body (multipart/form-data):
      *   archivo: [ReporteJuiciosEvaluativos.xlsx]
      */

@@ -3,13 +3,13 @@
 namespace App\Services\Sede;
 
 use App\Models\SedeModel;
-use Illuminate\Pagination\LengthAwarePaginator;
+
 
 class SedeService 
 {
-    public function getAll():LengthAwarePaginator
+    public function getAll()
     {
-      return SedeModel::with('municipio')->orderBy('idSede')->paginate(SedeModel::PAGINATION);
+      return SedeModel::with('municipio')->orderBy('idSede')->get();
     }
 
 

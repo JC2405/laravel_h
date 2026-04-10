@@ -10,7 +10,6 @@ class MunicipioModel extends Model
     protected $primaryKey = 'idMunicipio';
     public $timestamps =false;
     protected $fillable = ['nombreMunicipio'];
-    public const PAGINATION = 125; 
     
     
      public function sedes() {

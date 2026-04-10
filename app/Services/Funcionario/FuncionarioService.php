@@ -3,13 +3,12 @@
 namespace App\Services\Funcionario;
 
 use App\Models\FuncionarioModel;
-use Illuminate\Pagination\LengthAwarePaginator;
 
 class FuncionarioService
 {
-    public function getAll():LengthAwarePaginator
+    public function getAll()
     {
-        return FuncionarioModel::with(['tipoContrato', 'areas'])->orderBy('idFuncionario')->paginate(FuncionarioModel::PAGINATION);
+        return FuncionarioModel::with(['tipoContrato', 'areas'])->orderBy('idFuncionario')->get();
     }
 
     public function create(array $data, string $documento):FuncionarioModel

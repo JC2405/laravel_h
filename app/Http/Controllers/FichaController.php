@@ -40,24 +40,7 @@ class FichaController extends Controller
 {
     $editarFicha = FichaModel::findOrFail($idFicha);
      $this->service->update($editarFicha, $request->validated());
-    //$estadoAnterior = $editarFicha->estado; 
-//
-   //
-//
-    //$estadoNuevo = $editarFicha->estado;
-//
-    //
-    //if ($estadoAnterior === 'Activo' && $estadoNuevo === 'Inactivo') {
-    //    $res = $this->services->eliminarHorarioPorEstadoFicha($idFicha);
-//
-    //    if (!$res['ok']) {
-    //        return response()->json([
-    //            'message' => $res['mensaje']
-    //        ], $res['http'] ?? 422);
-    //    }
-    //}
-//
-    //return response()->json($editarFicha);
+    return response()->json(['ok' =>'ficha Editada Correctamente']);
 }
 
     public function destroy($idFicha)

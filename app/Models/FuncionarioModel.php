@@ -33,7 +33,6 @@ class FuncionarioModel extends Authenticatable implements JWTSubject
         ];
     }
 
-    public const PAGINATION = 10;
 
     // ── JWT obligatorios ──────────────────────────────────────
     public function getJWTIdentifier()

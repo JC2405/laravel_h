@@ -3,14 +3,14 @@
 namespace App\Services\Area;
 
 use App\Models\AreaModel;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+
 
 
 class AreaService
 {
-    public function getAll():LengthAwarePaginator
+    public function getAll()
     {
-        return AreaModel::orderBy('idArea')->paginate(AreaModel::PAGINATION);
+        return AreaModel::orderBy('idArea')->get();
     }
 
 

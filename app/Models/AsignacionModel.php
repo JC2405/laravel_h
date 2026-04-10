@@ -16,7 +16,7 @@ class AsignacionModel extends Model
         'estado',
     ];
 
-    public const PAGINATION = 10;
+
 
     public function funcionario(){
         return $this->belongsTo(FuncionarioModel::class, 'idFuncionario','idFuncionario');

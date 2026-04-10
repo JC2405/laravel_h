@@ -9,36 +9,17 @@ use Illuminate\Http\Request;
 
 class HorarioController extends Controller
 {
-    public function __construct(
-        protected AsignacionService $asignaciones,
-        protected MailService $mail,
-    ) {}
 
-    // ================================
-    // RESPUESTAS ESTÁNDAR
-    // ================================
+    //Services que vamos A utilizar 
+    public function __construct(protected AsignacionService $asignaciones,  protected MailService $mail,) {}
 
-    private function success($data = null, string $message = 'OK', int $code = 200)
-    {
-        return response()->json([
-            'ok'      => true,
-            'message' => $message,
-            'data'    => $data,
-        ], $code);
-    }
-
-    private function error(string $message = 'Error en el servidor', int $code = 500, $extra = [])
-    {
-        return response()->json(array_merge([
-            'ok'      => false,
-            'message' => $message,
-        ], $extra), $code);
-    }
-
+    
     // ================================
     // ASIGNACIONES
     // ================================
 
+
+    //Crear Asignacion depende Del service De asignaciones
     public function storeAsignacion(CreateAsignacionRequest $request)
     {
         $res = $this->asignaciones->crearAsignacion($request->validated());
@@ -54,6 +35,8 @@ class HorarioController extends Controller
         return $this->success($res['asignacion'], 'Asignación creada', 201);
     }
 
+
+    // Elimina la asignacion 
     public function destroyAsignacion(int $id)
     {
         $res = $this->asignaciones->eliminarAsignacion($id);
@@ -65,6 +48,8 @@ class HorarioController extends Controller
         return $this->success(null, 'Eliminado correctamente');
     }
 
+
+    //Elimina Un Dia de la asignacion Ejm: de lunes a viernes puedo eliminar el jueves con esto 
     public function destroyDiaDeBloque(int $idBloque, int $idDia)
     {
         $res = $this->asignaciones->eliminarDiaDeBloque($idBloque, $idDia);
@@ -82,21 +67,27 @@ class HorarioController extends Controller
         ], $res['mensaje']);
     }
 
-    public function eliminarHorarioPorEstado(int $idFicha)
-    {
-        $res = $this->asignaciones->eliminarHorarioPorEstadoFicha($idFicha);
+    
 
-        if (!$res['ok']) {
-            return $this->error($res['mensaje'], $res['http'] ?? 422);
-        }
 
-        return $this->success(null, $res['mensaje']);
-    }
 
     // ================================
-    // CONSULTAS
+    // CONSULTAS DE HORARIOS (GRILLAS)
     // ================================
 
+
+
+    // Este módulo permite listar horarios por:
+    // - Ficha, Ambiente,Funcionario (Instructor)
+
+    //  Flujo del proceso:
+
+    // 1. El Service (AsignacionesService) consulta la base de datos y obtiene las asignaciones junto con sus relaciones.
+    // 2. Estas asignaciones son enviadas al GrillaService.
+    // 3. El GrillaService utiliza un método base llamado `construirGrilla`, el cual se encarga de: Generar la estructura de la grilla (franjas horarias vs días) , Ubicar cada asignación en su respectiva celda según: hora, día y bloque
+    // 4. Existen métodos específicos como: construirGrillaParaFicha, construirGrillaParaInstructor,construirGrillaParaAmbiente
+
+    // Lista Horarios Por Fichas  
     public function horariosPorFicha(int $idFicha)
     {
         $res = $this->asignaciones->listarAsignacionesPorFicha($idFicha);
@@ -104,6 +95,8 @@ class HorarioController extends Controller
         return $this->success($res);
     }
 
+
+    // Lista los horarios de funcionarios
     public function listarFuncionarioPorHorario(int $idFuncionario)
     {
         $res = $this->asignaciones->listarClasesPorInstructor($idFuncionario);
@@ -111,6 +104,8 @@ class HorarioController extends Controller
         return $this->success($res);
     }
 
+
+    // Lista los horarios del Ambiente
     public function horariosPorAmbiente(int $idAmbiente){
 
         $res = $this->asignaciones->listarClasesPorAmbiente($idAmbiente);
@@ -119,6 +114,12 @@ class HorarioController extends Controller
     }
 
 
+
+
+
+    // ==============================
+    // Funcionalidades Del Dahboar
+    // ==============================
     public function dashboardMetrics()
     {
         return $this->success(
@@ -126,18 +127,21 @@ class HorarioController extends Controller
         );
     }
 
+
+
+
     // ================================
     // CORREOS
     // ================================
 
-    /**
-     * POST /api/enviarHorarioAprendiz/{idFicha}
-     *
-     * Body JSON opcional:
-     *   { "fechaInicio": "2025-01-01", "fechaFin": "2025-06-30" }
-     *
-     * Si no se envía el body, se notifican TODAS las asignaciones de la ficha.
-     */
+
+
+
+
+    // ================================================================
+    // Enviar Horario Aprendiz/ces depende conpletamente del service MailService->enviarHorarioAprendiz
+    // Se piden las fechas porque si no se enviarian todas las asignaciones que ha tenido la ficha
+    // =================================================================
     public function enviarHorarioAprendiz(int $idFicha, Request $request)
     {
         // Validar fechas solo si se envían
@@ -161,29 +165,36 @@ class HorarioController extends Controller
         return $this->success($res, 'Correos enviados');
     }
 
-    /**
-     * POST /api/enviarHorario/{idFuncionario}
-     *
-     * Body JSON opcional:
-     *   { "fechaInicio": "2025-01-01", "fechaFin": "2025-06-30" }
-     *
-     * Si no se envía el body, se notifica el horario completo del instructor.
-     */
-    public function enviarHorario(int $idFuncionario, Request $request)
+   
+
+
+
+
+
+        // =============================================================       
+        // Enviar Horario Funcionario Por Ficha Dependiendo De Las fechas
+        // Depende del IdFuncionario y su endPoint es POST /enviarHorario/{id}
+        // =============================================================
+        public function enviarHorario(int $idFuncionario, Request $request)
     {
-        // Validar fechas solo si se envían
+
+        // Valida La Ficha SI la envian
         $request->validate([
             'fechaInicio' => 'nullable|date',
             'fechaFin'    => 'nullable|date|after_or_equal:fechaInicio',
         ], [
+            // Pequeña Validacion para que al enviar la hora sirva
             'fechaFin.after_or_equal' => 'La fecha fin debe ser igual o posterior a la fecha de inicio.',
         ]);
 
+
+        //Llama al service para para Poder Enviar el main (enviarHorarioInstructor viene desde MailService)
         $res = $this->mail->enviarHorarioInstructor(
             $idFuncionario,
             $request->input('fechaInicio'),
             $request->input('fechaFin')
         );
+
 
         if (!$res['ok']) {
             return $this->error($res['mensaje'], 422);
@@ -191,4 +202,29 @@ class HorarioController extends Controller
 
         return $this->success($res, 'Correo enviado');
     }
+
+
+
+
+    // ================================
+    // RESPUESTAS ESTÁNDAR
+    // ================================
+
+    public function success($data = null, string $message = 'OK', int $code = 200)
+    {
+        return response()->json([
+            'ok'      => true,
+            'message' => $message,
+            'data'    => $data,
+        ], $code);
+    }
+
+    public function error(string $message = 'Error en el servidor', int $code = 500, $extra = [])
+    {
+        return response()->json(array_merge([
+            'ok'      => false,
+            'message' => $message,
+        ], $extra), $code);
+    }
+
 }

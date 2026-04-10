@@ -13,7 +13,7 @@ use Illuminate\Http\Request;
 class FuncionarioController extends Controller
 {
 
-    public function __construct(protected FuncionarioService $service,protected AsignacionService $services,) {}
+    public function __construct(protected FuncionarioService $service) {}
     /**
      * Display a listing of the resource.
      */
@@ -58,23 +58,8 @@ class FuncionarioController extends Controller
     public function update(updateFuncionarioRequest $request, $idFuncionario)
     {
         $editarFuncionario = FuncionarioModel::findOrFail($idFuncionario);
-
          $this->service->update($editarFuncionario, $request ->validated());
-       // $estadoAnterior = $editarFuncionario->estado;
-    //
-       //
-//
-      // // $estadoNuevo = $editarFuncionario->estado;
-//
-     //  // if($estadoAnterior === 'ACTIVO' && $estadoNuevo === 'INACTIVO'){
-       ////     $respuesta = $this->services->eliminarHorarioPorEstadoFuncionario($idFuncionario);
-//
-         //   if (!$respuesta['ok']) {
-         //       return response()->json([
-         //           'message' => $respuesta['mensaje']
-         //       ], $respuesta['http'] ?? 422);
-         //   }
-        //
+         return response()->json(['ok' => 'funcionario Editado Corrextamente']);
     }
 
     /**

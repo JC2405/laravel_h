@@ -4,13 +4,12 @@ namespace App\Services\TipoContrato;
 use App\Models\TipoContratoModel;
 
 
-use Illuminate\Pagination\LengthAwarePaginator;
 
 class TipoContratoService
 {
-    public function getAll():LengthAwarePaginator
+    public function getAll()
     {
-        return TipoContratoModel::orderBy('idTipoContrato')->paginate(TipoContratoModel::PAGINATION);
+        return TipoContratoModel::orderBy('idTipoContrato')->get();
     }
 
 

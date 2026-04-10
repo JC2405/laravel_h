@@ -10,7 +10,6 @@ class AmbienteModel extends Model
     protected $primaryKey = 'idAmbiente';
     public $timestamps =false;
     protected $fillable = ['codigo','capacidad','numero','descripcion','bloque','estado','tipoAmbiente','idSede','idArea'];
-    public const PAGINATION=10;
 
     
         public function sede()

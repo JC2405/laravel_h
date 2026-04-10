@@ -3,14 +3,13 @@
 namespace App\Services\Dia;
 
 use App\Models\DiaModel;
-use Illuminate\Pagination\LengthAwarePaginator;
 
 class DiaService
 {
 
-        public function getAll():LengthAwarePaginator
+        public function getAll()
         {
-            return DiaModel::orderBy('idDia')->paginate(DiaModel::PAGINATION);
+            return DiaModel::orderBy('idDia')->get();
         }
     
 

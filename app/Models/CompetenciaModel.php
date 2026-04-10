@@ -10,7 +10,6 @@ class CompetenciaModel extends Model
 
     protected $fillable = [  'nombreCompetencia','codigo','tipo' , 'idTipoFormacion' ];
 
-    public const PAGINATION = 10;
 
     public function tipoFormacion()
     {

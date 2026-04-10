@@ -3,13 +3,13 @@
 namespace App\Services\TipoFormacion;
 
 use App\Models\TipoFormacionModel;
-use Illuminate\Pagination\LengthAwarePaginator;
+
 
 class TipoFormacionService
 {
-    public function getAll():LengthAwarePaginator
+    public function getAll()
     {
-       return TipoFormacionModel::orderBy('idTipoFormacion')->paginate(TipoFormacionModel::PAGINATION);
+       return TipoFormacionModel::orderBy('idTipoFormacion')->get();
     }
 
 

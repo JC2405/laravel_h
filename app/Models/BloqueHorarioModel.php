@@ -19,7 +19,6 @@ class BloqueHorarioModel extends Model
         'tipoFormacion',
     ];
 
-    public const PAGINATION = 10;
 
     public function asignacion() {
         return $this->belongsTo(AsignacionModel::class, 'idAsignacion', 'idAsignacion');

@@ -3,13 +3,12 @@
 namespace App\Services\Municipio;
 
 use App\Models\MunicipioModel;
-use Illuminate\Pagination\LengthAwarePaginator;
 
 class MunicipioService
 {
-    public function getAll():LengthAwarePaginator
+    public function getAll()
     {
-        return MunicipioModel::orderBy('idMunicipio')->paginate(MunicipioModel::PAGINATION);
+        return MunicipioModel::orderBy('idMunicipio')->get();
     }    
 
 

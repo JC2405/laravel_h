@@ -127,8 +127,8 @@ class GrillaService
         $franjas = [];
 
         // Aqui se maneja el inicio de la grilla desde que horas hasta que horas // $hora es para partir horas de 2 en 2 
-        for ($hora = 6; $hora < 24; $hora += 2) {
-            $franjas[] = sprintf('%02d:00 - %02d:00', $hora, $hora + 2);
+        for ($hora = 6; $hora < 24; $hora += 1) {
+            $franjas[] = sprintf('%02d:00 - %02d:00', $hora, $hora + 1);
         }
         return $franjas;
     }

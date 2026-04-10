@@ -82,21 +82,8 @@ class AsignacionService
         return ['ok' => true];
     }
 
-    // ================================
-    // ELIMINAR POR ESTADO DE FICHA
-    // ================================
-    public function eliminarHorarioPorEstadoFicha(int $idFicha): array
-    {
-        $verificacion = $this->fichaService->verificarEstadoFicha($idFicha);
-
-        if (!$verificacion['ok']) return $verificacion;
-
-        DB::transaction(fn() => $this->eliminarAsignacionesYBloques($idFicha));
-
-        return ['ok' => true, 'mensaje' => 'Horario eliminado correctamente'];
-    }
-
-    private function eliminarAsignacionesYBloques(int $idFicha): void
+    
+    public function eliminarAsignacionesYBloques(int $idFicha): void
     {
         AsignacionModel::with('bloque.dias')
             ->where('idFicha', $idFicha)
@@ -110,14 +97,7 @@ class AsignacionService
     }
 
 
-    public function eliminarHorarioPorEstadoFuncionario(int $idFuncionario):array
-    {
-        $verificacion = $this->funcionarioService->verificarEstadoPorInstructor($idFuncionario);
-
-        if (!$verificacion['ok']) return $verificacion;
-        DB::transaction(fn()=> $this->eliminarAsignacionesYBloques($idFuncionario));
-        return ['ok' => true, 'mensaje' => 'horario Eliminado Correctamente'];
-    } 
+  
     // ================================
     // ELIMINAR DÍA DE BLOQUE
     // ================================
@@ -248,6 +228,9 @@ class AsignacionService
         $bloque->delete();
     }
 
+
+
+
     // ================================
     // VALIDACIONES
     // ================================
@@ -271,6 +254,9 @@ class AsignacionService
 
         return null;
     }
+
+
+
 
     // ================================
     // CONFLICTOS
@@ -308,6 +294,10 @@ class AsignacionService
         }
     }
 
+
+
+
+
     // ================================
     // UTILS
     // ================================
@@ -317,6 +307,9 @@ class AsignacionService
             ? null
             : $datos['idAmbiente'];
     }
+
+
+
 
     private function normalizarDatosEntrada(array $datos): array
     {
@@ -336,6 +329,9 @@ class AsignacionService
         ];
     }
 
+
+
+    
     private function respuestaError(string $codigo, string $mensaje, int $http = 422): array
     {
         return [

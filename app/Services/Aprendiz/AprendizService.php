@@ -3,14 +3,13 @@
 namespace App\Services\Aprendiz;
 
 use App\Models\AprendizModel;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
 class AprendizService
 {
-    public function getAll():LengthAwarePaginator
+    public function getAll()
     {
-        return AprendizModel::with('ficha')->orderBy('idAprendiz')->paginate(AprendizModel::PAGINATION);
+        return AprendizModel::with('ficha')->orderBy('idAprendiz')->get();
     }
 
     public function store(array $data, string $documento):AprendizModel
