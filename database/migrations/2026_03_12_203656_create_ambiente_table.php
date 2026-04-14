@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('ambiente', function (Blueprint $table) {
           $table->unsignedInteger('idAmbiente')->autoIncrement();
-            $table->string('codigo', 255)->nullable()->unique('uqAmbienteCodigo');
+            $table->string('codigo', 255)->nullable()   ;
             $table->integer('capacidad');
             $table->string('descripcion', 255)->nullable();
             $table->string('bloque', 100)->nullable();
