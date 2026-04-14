@@ -10,9 +10,10 @@ class FichaService
     {
         return FichaModel::with([
             'programa.tipoFormacion',
-            'asignaciones.ambiente.sede.municipio', // ahora el municipio se obtiene desde sede
+            'asignaciones.ambiente.sede.municipio', 
             'sede.municipio',
-        ])->orderBy('idFicha')->get();
+        ])  ->orderBy('fechaInicio','DESC') 
+            ->get();
     }
 
     public function create(array $data): FichaModel
@@ -29,6 +30,11 @@ class FichaService
     public function delete(FichaModel $fichaModel): void
     {
         $fichaModel->delete();
+    }
+
+    public function findById(int $idFicha): ?object
+    {
+        return FichaModel::find($idFicha);
     }
 
     public function show($codigoFicha)

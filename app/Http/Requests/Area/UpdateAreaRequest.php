@@ -22,7 +22,8 @@ class UpdateAreaRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nombreArea' => 'required|string|max:255'
+            'nombreArea' => 'required|string|max:255',
+            'tipo' => 'required|string|max:255',
         ];
     }
 }

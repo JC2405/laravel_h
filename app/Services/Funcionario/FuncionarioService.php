@@ -8,7 +8,7 @@ class FuncionarioService
 {
     public function getAll()
     {
-        return FuncionarioModel::with(['tipoContrato', 'areas'])->orderBy('idFuncionario')->get();
+        return FuncionarioModel::with(['tipoContrato', 'areas', 'roles'])->orderBy('idFuncionario')->get();
     }
 
     public function create(array $data, string $documento):FuncionarioModel

@@ -13,7 +13,8 @@ return new class extends Migration
     {
         Schema::create('area', function (Blueprint $table) {
            $table->unsignedInteger('idArea')->autoIncrement();
-           $table->string('nombreArea', 100)->unique('uqAreaNombre');
+           $table->string('nombreArea', 100);
+           $table->string('tipo', 100);
         });
     }
 

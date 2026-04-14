@@ -32,4 +32,15 @@ class createFichaRequest extends FormRequest
             'idSede'  => 'required|integer|exists:sede,idSede',
         ];
     }
+
+    public function messages(): array
+    {
+        return [
+            'codigoFicha.required' => 'El código de la ficha es obligatorio.',
+            'codigoFicha.unique'   => 'No se puede crear la ficha porque ya existe una con ese código.',
+
+            'fechaInicio.required' => 'La fecha de inicio es obligatoria.',
+            'fechaFin.required'    => 'La fecha de fin es obligatoria.',
+        ];
+    }
 }

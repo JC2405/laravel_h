@@ -252,11 +252,15 @@ class AsignacionService
             return $this->respuestaError('AMBIENTE_REQUERIDO', 'Ambiente requerido');
         }
 
+         $errorFicha = $this->validarFechasDentroDeFicha($datos);
+        if ($errorFicha) return $errorFicha;
+
+
         return null;
     }
 
 
-
+    
 
     // ================================
     // CONFLICTOS
@@ -294,6 +298,32 @@ class AsignacionService
         }
     }
 
+    public function validarFechasDentroDeFicha(array $datos): ?array
+{
+    $ficha = $this->fichaService->findById($datos['idFicha']);
+
+    if (!$ficha) {
+        return $this->respuestaError('FICHA_NO_ENCONTRADA', 'La ficha no existe.', 404);
+    }
+
+    $inicioBloque = $datos['fechaInicioPeriodo'];
+    $finBloque    = $datos['fechaFinPeriodo'];
+    $inicioFicha  = $ficha->fechaInicio; // ajusta al nombre real de tu columna
+    $finFicha     = $ficha->fechaFin;
+
+    // El bloque debe estar DENTRO del período de la ficha (BETWEEN)
+    $dentroDelRango = $inicioBloque >= $inicioFicha && $finBloque <= $finFicha;
+
+    if (!$dentroDelRango) {
+        return $this->respuestaError(
+            'FECHA_FUERA_DE_RANGO',
+            "Las fechas del horario ({$inicioBloque} → {$finBloque}) deben estar dentro del período de la ficha ({$inicioFicha} → {$finFicha}).",
+            422
+        );
+    }
+
+    return null;    
+    }
 
 
 
