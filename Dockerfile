@@ -1,66 +1,41 @@
+FROM php:8.2-apache
 
-# ─────────────────────────────────────────
-#  Imagen única: PHP 8.4 + todo en un solo stage
-# ─────────────────────────────────────────
-FROM php:8.4-fpm-alpine
-
-# Dependencias del sistema
-RUN apk add --no-cache \
-    nginx \
-    supervisor \
+# Instalar dependencias del sistema requeridas por Laravel
+RUN apt-get update && apt-get install -y \
+    git \
     curl \
     libpng-dev \
-    libjpeg-turbo-dev \
-    freetype-dev \
-    libzip-dev \
+    libonig-dev \
+    libxml2-dev \
     zip \
     unzip \
-    oniguruma-dev \
-    icu-dev \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install \
-        pdo \
-        pdo_mysql \
-        mbstring \
-        exif \
-        pcntl \
-        bcmath \
-        gd \
-        zip \
-        intl \
-        opcache
+    default-mysql-client
 
-# Instalar Composer
-COPY --from=composer:2.7 /usr/bin/composer /usr/bin/composer
+# Limpiar caché de apt
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# Instalar extensiones de PHP
+RUN docker-php-ext-install pdo_mysql mbstring pcntl bcmath gd
+
+# Habilitar mod_rewrite de Apache para las URLs de Laravel
+RUN a2enmod rewrite
+
+# Configurar el DocumentRoot de Apache a la carpeta public de Laravel
+ENV APACHE_DOCUMENT_ROOT /var/www/html/public
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
+RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+
+# Establecer directorio de trabajo
 WORKDIR /var/www/html
 
-# Copiar código fuente
+# Copiar el código del proyecto
 COPY . .
 
-# Instalar dependencias PHP (ahora GD ya está disponible)
-RUN composer install \
-    --no-dev \
-    --no-interaction \
-    --no-scripts \
-    --prefer-dist \
-    --optimize-autoloader
+# Instalar Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Permisos
-RUN mkdir -p /var/www/html/storage/logs \
-    && mkdir -p /var/www/html/storage/framework/cache \
-    && mkdir -p /var/www/html/storage/framework/sessions \
-    && mkdir -p /var/www/html/storage/framework/views \
-    && mkdir -p /var/www/html/bootstrap/cache \
-    && chown -R www-data:www-data /var/www/html \
-    && chmod -R 755 /var/www/html/storage \
-    && chmod -R 755 /var/www/html/bootstrap/cache
+# Instalar dependencias de PHP
+RUN composer install --no-interaction --optimize-autoloader
 
-# Configuraciones
-COPY docker/nginx/default.conf /etc/nginx/http.d/default.conf
-COPY docker/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-COPY docker/php/php.ini /usr/local/etc/php/conf.d/custom.ini
-
-EXPOSE 8000
-
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+# Dar permisos a las carpetas de almacenamiento
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
