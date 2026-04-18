@@ -35,6 +35,10 @@ COPY . .
 # Instalar Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
+# Asegurar directorios requeridos por Laravel antes de correr Composer scripts.
+RUN mkdir -p /var/www/html/storage /var/www/html/bootstrap/cache && \
+    chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+
 # Instalar dependencias de PHP
 RUN composer install --no-interaction --optimize-autoloader
 
