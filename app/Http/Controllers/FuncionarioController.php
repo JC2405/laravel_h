@@ -9,6 +9,7 @@ use App\Models\FuncionarioModel;
 use App\Services\Funcionario\FuncionarioService;
 use App\Services\Horario\AsignacionService;
 use Illuminate\Http\Request;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class FuncionarioController extends Controller
 {
@@ -67,26 +68,56 @@ class FuncionarioController extends Controller
      */
     public function destroy($idFuncionario)
     {
-        $eliminarFuncionario = FuncionarioModel::findOrFail($idFuncionario);
-        
-        try {
-            $this->service->delete($eliminarFuncionario);
-            return response()->json(["message"=>"Funcionario Eliminado Correctamente"]);
-        } catch (\Illuminate\Database\QueryException $e) {
-            // Error 1451 is "Cannot delete or update a parent row: a foreign key constraint fails"
-            if ($e->getCode() == 23000) {
-                return response()->json([
-                    "message" => "No se puede eliminar este instructor porque tiene horarios u otros datos asignados."
-                ], 400);
-            }
+    try {
+        $usuarioAutenticado = JWTAuth::parseToken()->authenticate();
+    } catch (\Exception $e) {
+        return response()->json(["message" => "Token inválido o expirado."], 401);
+    }
+
+    if ($usuarioAutenticado->idFuncionario == $idFuncionario) {
+        return response()->json([
+            "message" => "No puedes eliminarte a ti mismo."
+        ], 403);
+    }
+
+    $eliminarFuncionario = FuncionarioModel::findOrFail($idFuncionario);
+    
+    try {
+        $this->service->delete($eliminarFuncionario);
+        return response()->json(["message" => "Funcionario Eliminado Correctamente"]);
+    } catch (\Illuminate\Database\QueryException $e) {
+        if ($e->getCode() == 23000) {
             return response()->json([
-                "message" => "Error al eliminar el instructor en la base de datos."
-            ], 500);
+                "message" => "No se puede eliminar este instructor porque tiene horarios u otros datos asignados."
+            ], 400);
+        }
+        return response()->json([
+            "message" => "Error al eliminar el instructor en la base de datos."
+        ], 500);
         }
     }
 
     public function countInstructores()
     {
         return response()->json(['count' => $this->service->countInstructores()]);
+    }
+
+    public function asignarAreaMasivo(Request $request)
+    {
+        $request->validate([
+            'area_id' => 'required|exists:area,idArea',
+            'funcionarios_ids' => 'required|array',
+            'funcionarios_ids.*' => 'exists:funcionario,idFuncionario'
+        ]);
+
+        $areaId = $request->input('area_id');
+        $funcionariosIds = $request->input('funcionarios_ids');
+        
+        $insertedCount = $this->service->asignarAreaMasivo($areaId, $funcionariosIds);
+
+        return response()->json([
+            'message' => "Área asignada correctamente a $insertedCount instructores.",
+            'inserted_count' => $insertedCount
+        ]);
     }
 }

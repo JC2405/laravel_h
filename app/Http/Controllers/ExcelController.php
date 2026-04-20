@@ -106,6 +106,9 @@ class ExcelController extends Controller
 
     public function importarFuncionarios(Request $request)
     {
+        // Aumentar el límite de tiempo de ejecución para evitar timeout (Error 500)
+        set_time_limit(300);
+
         $request->validate([
             'archivo' => 'required|file|mimes:xlsx,xls,csv|max:5120',
         ], [
@@ -141,6 +144,7 @@ class ExcelController extends Controller
 
     public function importarAprendices(Request $request)
     {
+        set_time_limit(300);
         $request->validate([
             'archivo'  => 'required|file|mimes:xlsx,xls,csv|max:5120',
             'id_ficha' => 'required|integer|exists:ficha,idFicha',
@@ -195,6 +199,7 @@ class ExcelController extends Controller
      */
     public function importarCompetencias(Request $request)
 {
+    set_time_limit(300);
     $request->validate([
         'archivo'           => 'required|file|mimes:xlsx,xls,csv|max:5120',
         'id_tipo_formacion' => 'nullable|integer|exists:tipoFormacion,idTipoFormacion',
@@ -258,6 +263,7 @@ class ExcelController extends Controller
 
     public function importarResultados(Request $request)
     {
+        set_time_limit(300);
         // Validación del archivo
         $request->validate([
             'archivo'           => 'required|file|mimes:xlsx,xls,csv|max:5120',

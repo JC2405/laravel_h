@@ -94,6 +94,7 @@ Route::put('editarFuncionario/{idFuncionario}',[FuncionarioController::class,'up
 Route::get('listarFuncionatioXDocumento/{documento}',[FuncionarioController::class,'show']);
 Route::delete('eliminarFuncionario/{idFuncionario}',[FuncionarioController::class,'destroy']);
 Route::post('crearAdmin',[FuncionarioController::class,'crearAdmin']);
+Route::post('asignar-area-masivo', [FuncionarioController::class, 'asignarAreaMasivo']);
 
 
 Route::get('listarAmbiente',[AmbienteController::class,'index']);

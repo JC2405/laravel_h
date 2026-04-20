@@ -91,6 +91,21 @@ class FuncionarioService
         return['ok' => true];
     }
 
-    
+    public function asignarAreaMasivo($areaId, array $funcionariosIds): int
+    {
+        $insertedCount = 0;
+
+        foreach ($funcionariosIds as $idFuncionario) {
+            $funcionario = FuncionarioModel::find($idFuncionario);
+            if ($funcionario) {
+                $changes = $funcionario->areas()->syncWithoutDetaching([$areaId]);
+                if (!empty($changes['attached'])) {
+                    $insertedCount += count($changes['attached']);
+                }
+            }
+        }
+
+        return $insertedCount;
+    }
    
 }
