@@ -18,11 +18,19 @@ class FichaService
 
     public function create(array $data): FichaModel
     {
+        if (FichaModel::where('codigoFicha', $data['codigoFicha'])->exists()) {
+            throw new \Exception('El código de ficha "' . $data['codigoFicha'] . '" ya está registrado.');
+        }
         return FichaModel::create($data);
     }
 
-    public function update(FichaModel $fichaModel, $data): FichaModel
+   public function update(FichaModel $fichaModel, $data): FichaModel
     {
+        if (FichaModel::where('codigoFicha', $data['codigoFicha'])
+            ->where('idFicha', '!=', $fichaModel->idFicha)
+            ->exists()) {
+            throw new \Exception('El código de ficha "' . $data['codigoFicha'] . '" ya está en uso por otra ficha.');
+        }
         $fichaModel->update($data);
         return $fichaModel->fresh();
     }

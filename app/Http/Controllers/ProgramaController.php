@@ -11,7 +11,9 @@ class ProgramaController extends Controller
 {
 
 
-    public function __construct(protected ProgramaService $service) { }
+    public function __construct(protected ProgramaService $service)
+    {
+    }
     /**
      * Display a listing of the resource.
      */
@@ -21,7 +23,7 @@ class ProgramaController extends Controller
         return response()->json($listarProgramas);
     }
 
-  
+
 
     /**
      * Store a newly created resource in storage.
@@ -41,12 +43,12 @@ class ProgramaController extends Controller
         return response()->json($buscarPrograma);
     }
 
-   
+
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(updateProgramaRequest $request , $idPrograma)
+    public function update(updateProgramaRequest $request, $idPrograma)
     {
         $editPrograma = ProgramaModel::findOrFail($idPrograma);
         $this->service->update($editPrograma, $request->validated());
@@ -60,6 +62,6 @@ class ProgramaController extends Controller
     {
         $eliminarPrograma = ProgramaModel::findOrFail($idPrograma);
         $this->service->delete($eliminarPrograma);
-        return response()->json(["message"=>"Progrma Eliminado Correctamente"]);
+        return response()->json(["message" => "Progrma Eliminado Correctamente"]);
     }
 }

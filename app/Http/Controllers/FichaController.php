@@ -12,13 +12,14 @@ use Illuminate\Http\Request;
 
 class FichaController extends Controller
 {
-    public function __construct(protected FichaService $service, protected AsignacionService $services) {
+    public function __construct(protected FichaService $service, protected AsignacionService $services)
+    {
     }
 
 
     public function index()
     {
-        $listarFichas= $this->service->getAll();
+        $listarFichas = $this->service->getAll();
         return response()->json($listarFichas);
     }
 
@@ -28,26 +29,40 @@ class FichaController extends Controller
         return response()->json($data);
     }
 
-    public function store(createFichaRequest $request)
+   public function store(createFichaRequest $request)
     {
-        $crearFicha = $this->service->create($request->validated());
-        return response()->json($crearFicha);
+        try {
+            $crearFicha = $this->service->create($request->validated());
+            return response()->json($crearFicha);
+        } catch (\Exception $e) {
+            return response()->json([
+                'ok' => false,
+                'message' => $e->getMessage()
+            ], 422);
+        }
     }
 
 
 
-    public function update(UpdateFichaRequest $request, $idFicha)
-{
-    $editarFicha = FichaModel::findOrFail($idFicha);
-     $this->service->update($editarFicha, $request->validated());
-    return response()->json(['ok' =>'ficha Editada Correctamente']);
-}
-
+   public function update(UpdateFichaRequest $request, $idFicha)
+    {
+        try {
+            $editarFicha = FichaModel::findOrFail($idFicha);
+            $this->service->update($editarFicha, $request->validated());
+            return response()->json(['ok' => true, 'message' => 'Ficha editada correctamente']);
+        } catch (\Exception $e) {
+            return response()->json([
+                'ok' => false,
+                'message' => $e->getMessage()
+            ], 422);
+        }
+    }
+    
     public function destroy($idFicha)
     {
         $eliminarFicha = FichaModel::findOrFail($idFicha);
         $this->service->delete($eliminarFicha);
-        return response()->json(["message"=>"ficha Eliminada Correctamente"]);
+        return response()->json(["message" => "ficha Eliminada Correctamente"]);
     }
 
     public function show($codigoFicha)
@@ -72,7 +87,7 @@ class FichaController extends Controller
     public function programasPorSede($idSede)
     {
         return response()->json(
-                $this->service->obtenerProgramasPorSede((int)$idSede)
+            $this->service->obtenerProgramasPorSede((int) $idSede)
         );
     }
 

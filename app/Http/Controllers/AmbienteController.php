@@ -10,16 +10,18 @@ use App\Services\Ambiente\AmbienteService;
 
 class AmbienteController extends Controller
 {
-    public function __construct(protected AmbienteService $service) { }
-    
-    
+    public function __construct(protected AmbienteService $service)
+    {
+    }
+
+
     public function index()
     {
         $listarAmbiente = $this->service->getAll();
         return response()->json($listarAmbiente);
     }
 
-    
+
 
     /**
      * Store a newly created resource in storage.
@@ -35,15 +37,15 @@ class AmbienteController extends Controller
      */
     public function show(string $id)
     {
-        
+
     }
 
-    
+
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(updateAmbienteRequest $request,  $idAmbiente)
+    public function update(updateAmbienteRequest $request, $idAmbiente)
     {
         $editarAmbiente = AmbienteModel::findOrFail($idAmbiente);
         $this->service->update($editarAmbiente, $request->validated());
@@ -57,7 +59,7 @@ class AmbienteController extends Controller
     {
         $eliminarAmbiente = AmbienteModel::findOrFail($idAmbiente);
         $this->service->delete($eliminarAmbiente);
-        return response()->json(["message"=>"Ambiente Eliminado Correctamente"]);
+        return response()->json(["message" => "Ambiente Eliminado Correctamente"]);
     }
 
     public function countLibres()

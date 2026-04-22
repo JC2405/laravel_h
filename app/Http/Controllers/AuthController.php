@@ -7,7 +7,9 @@ use App\Services\Auth\AuthService;
 
 class AuthController extends Controller
 {
-    public function __construct(protected AuthService $service) {}
+    public function __construct(protected AuthService $service)
+    {
+    }
 
     /** POST /api/login */
     public function login(LoginRequest $request)
@@ -49,13 +51,13 @@ class AuthController extends Controller
             return response()->json(['message' => 'No autenticado.'], 401);
         }
 
-        $funcionario->load('roles'); 
+        $funcionario->load('roles');
 
         return response()->json([
-            'id'     => $funcionario->idFuncionario,
+            'id' => $funcionario->idFuncionario,
             'nombre' => $funcionario->nombre,
             'correo' => $funcionario->correo,
-            'rol'    => $funcionario->roles->first()?->nombreRol,
+            'rol' => $funcionario->roles->first()?->nombreRol,
         ]);
     }
 
@@ -70,7 +72,7 @@ class AuthController extends Controller
 
         $funcionario->load('roles'); // ✅ load en lugar de loadMissing
 
-        $rol   = strtolower($funcionario->roles->first()?->nombreRol ?? '');
+        $rol = strtolower($funcionario->roles->first()?->nombreRol ?? '');
         $items = $this->service->getSidebarPorRol($rol);
 
         return response()->json(['rol' => $rol, 'sidebar' => $items]);
