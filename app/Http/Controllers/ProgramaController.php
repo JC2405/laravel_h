@@ -30,8 +30,15 @@ class ProgramaController extends Controller
      */
     public function store(createProgramaRequest $request)
     {
-        $crearPrograma = $this->service->create($request->validated());
-        return response()->json($crearPrograma);
+        try {
+            $crearPrograma = $this->service->create($request->validated());
+            return response()->json($crearPrograma);
+        } catch (\Exception $e) {
+            return response()->json([
+                'ok' => false,
+                'message' => $e->getMessage()
+            ], 422);
+        }
     }
 
     /**
@@ -50,9 +57,16 @@ class ProgramaController extends Controller
      */
     public function update(updateProgramaRequest $request, $idPrograma)
     {
-        $editPrograma = ProgramaModel::findOrFail($idPrograma);
-        $this->service->update($editPrograma, $request->validated());
-        return response()->json($editPrograma->fresh());
+        try {
+            $editPrograma = ProgramaModel::findOrFail($idPrograma);
+            $this->service->update($editPrograma, $request->validated());
+            return response()->json($editPrograma->fresh());
+        } catch (\Exception $e) {
+            return response()->json([
+                'ok' => false,
+                'message' => $e->getMessage()
+            ], 422);
+        }
     }
 
     /**

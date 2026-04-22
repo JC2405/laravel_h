@@ -11,13 +11,21 @@ class ProgramaService
         return ProgramaModel::with('tipoFormacion')->orderBy('idPrograma')->get();
     }
 
-    public function create(array $data):ProgramaModel
+        public function create(array $data): ProgramaModel
     {
+        if (ProgramaModel::where('codigo', $data['codigo'])->exists()) {
+            throw new \Exception('El código de programa "' . $data['codigo'] . '" ya está registrado.');
+        }
         return ProgramaModel::create($data);
     }
-
-    public function update(ProgramaModel $programaModel,array $data)
+    
+    public function update(ProgramaModel $programaModel, array $data)
     {
+        if (ProgramaModel::where('codigo', $data['codigo'])
+            ->where('idPrograma', '!=', $programaModel->idPrograma)
+            ->exists()) {
+            throw new \Exception('El código de programa "' . $data['codigo'] . '" ya está en uso por otro programa.');
+        }
         $programaModel->update($data);
         return $programaModel->refresh();
     }
