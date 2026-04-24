@@ -3,10 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Ambiente\createAmbienteRequest;
+use App\Http\Requests\Ambiente\filtrarPorAmbienteRequest;
 use App\Http\Requests\Ambiente\updateAmbienteRequest;
 use App\Models\AmbienteModel;
 use App\Services\Ambiente\AmbienteService;
-
+use Symfony\Component\HttpFoundation\Request;
 
 class AmbienteController extends Controller
 {
@@ -70,5 +71,13 @@ class AmbienteController extends Controller
     public function ocupacion()
     {
         return response()->json($this->service->ocupacion());
+    }
+
+    public function AmbientesDesocupadosPorFechaYHora(filtrarPorAmbienteRequest $request)
+    {
+        return response()->json(
+            $this->service->buscarAmbiente($request->idSede,$request->fechaInicio,$request->fechaFin,$request->horaInicio,$request->horaFin
+            )
+        );
     }
 }

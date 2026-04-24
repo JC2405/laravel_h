@@ -46,4 +46,40 @@ class AmbienteService
     {
         $ambienteModel->delete();
     }
+
+    public function buscarAmbiente(int $idSede, string $fechaInicio, string $fechaFin, string $horaInicio, string $horaFin): array
+{
+    return DB::table('ambiente as a')
+        ->join('area as ar', 'a.idArea', '=', 'ar.idArea') // 🔥 JOIN
+
+        ->where('a.idSede', $idSede)
+        ->where('a.estado', 'Activo')
+
+        ->whereNotExists(function ($query) use ($fechaInicio, $fechaFin, $horaInicio, $horaFin) {
+            $query->select(DB::raw(1))
+                ->from('asignacion as asg')
+                ->join('bloque as b', 'asg.idAsignacion', '=', 'b.idAsignacion')
+                ->whereColumn('asg.idAmbiente', 'a.idAmbiente')
+
+                ->where(function ($q) use ($fechaInicio, $fechaFin) {
+                    $q->where('b.fechaInicio', '<=', $fechaFin)
+                      ->where('b.fechaFin', '>=', $fechaInicio);
+                })
+
+                ->where(function ($q) use ($horaInicio, $horaFin) {
+                    $q->where('b.horaInicio', '<', $horaFin)
+                      ->where('b.horaFin', '>', $horaInicio);
+                });
+        })
+
+        // 🔥 AQUÍ ARMAS EL TEXTO
+        ->select(
+            'a.idAmbiente',
+            DB::raw("CONCAT(ar.nombreArea, ' - ', a.bloque) as nombreCompleto")
+        )
+
+        ->get()
+        ->toArray();
+    }
+
 }

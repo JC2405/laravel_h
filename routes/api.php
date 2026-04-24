@@ -101,7 +101,7 @@ Route::get('listarAmbiente',[AmbienteController::class,'index']);
 Route::post('crearAmbiente',[AmbienteController::class,'store']);
 Route::put('editarAmbiente/{idAmbiente}',[AmbienteController::class,'update']);
 Route::delete('eliminarAmbiente/{idAmbiente}',[AmbienteController::class,'destroy']);
-
+Route::post('/ambientes/disponibles', [AmbienteController::class, 'AmbientesDesocupadosPorFechaYHora']);
 
 Route::get('listarFicha',[FichaController::class,'index']);
 Route::post('crearFicha',[FichaController::class,'store']);
