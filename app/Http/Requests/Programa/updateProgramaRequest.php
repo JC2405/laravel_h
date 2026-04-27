@@ -26,7 +26,8 @@ class updateProgramaRequest extends FormRequest
             'codigo'=>'required|string|max:255',
             'version'=>'required|integer',
             'estado'=>'required|string|max:255',
-            'idTipoFormacion'=>'required|integer'
+            'idTipoFormacion'=>'required|integer',
+            'idArea'=>'required|integer'
         ];
     }
 }

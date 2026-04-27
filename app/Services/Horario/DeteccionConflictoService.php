@@ -92,13 +92,14 @@ class DeteccionConflictoService
 
             // Solo los campos necesarios para armar el mensaje de error
             ->select(
+                'asig.idFicha',
                 'blq.idBloque',
                 'blq.horaInicio',
                 'blq.horaFin',
                 'blq.fechaInicio',
                 'blq.fechaFin',
                 'f.codigoFicha',
-                DB::raw('instructor.nombre as instructor_nombre')
+                DB::raw("CONCAT(instructor.nombre,' ',instructor.apellido) as instructor_nombre")
             )
             ->first(); // null si no hay conflicto
     }
@@ -156,6 +157,7 @@ class DeteccionConflictoService
             ->when($excluirFicha,  fn($q) => $q->where('asig.idFicha', '!=', $excluirFicha))
 
             ->select(
+                'asig.idficha',
                 'blq.idBloque',
                 'blq.horaInicio',
                 'blq.horaFin',

@@ -10,6 +10,7 @@ class FichaService
     {
         return FichaModel::with([
             'programa.tipoFormacion',
+            'programa.area',
             'asignaciones.ambiente.sede.municipio', 
             'sede.municipio',
         ])  ->orderBy('fechaInicio','DESC') 
@@ -122,6 +123,7 @@ class FichaService
     {
          return FichaModel::with([
             'programa.tipoFormacion',
+            'programa.area',
             'sede.municipio',
             'asignaciones.bloque'
         ])
@@ -138,6 +140,7 @@ class FichaService
     {
         return FichaModel::with([
                 'programa.tipoFormacion',
+                'programa.area',
                 'sede.municipio',
                 'asignaciones.bloque'
             ])

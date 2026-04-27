@@ -1,8 +1,11 @@
 <?php
 
 namespace App\Services\Funcionario;
-
+use Illuminate\Support\Facades\DB;
 use App\Models\FuncionarioModel;
+
+
+use function Laravel\Prompts\select;
 
 class FuncionarioService
 {
@@ -107,5 +110,40 @@ class FuncionarioService
 
         return $insertedCount;
     }
-   
+ 
+    
+
+    public function countHorasFuncionario(int $idFuncionario, string $fechaInicio, string $fechaFin)
+    {
+    return DB::table('funcionario as f')
+        ->join('asignacion as asig', 'asig.idFuncionario', '=', 'f.idFuncionario')
+        ->join('bloque as blq', 'blq.idAsignacion', '=', 'asig.idAsignacion')
+        ->join('tipoContrato as tpc', 'tpc.idTipoContrato', '=', 'f.idTipoContrato')
+        ->where('f.idFuncionario', $idFuncionario)
+
+        // 🔥 FILTRO CORRECTO DE RANGO
+        ->where(function ($q) use ($fechaInicio, $fechaFin) {
+            $q->whereBetween('blq.fechaInicio', [$fechaInicio, $fechaFin])
+              ->orWhereBetween('blq.fechaFin', [$fechaInicio, $fechaFin])
+              ->orWhere(function ($q2) use ($fechaInicio, $fechaFin) {
+                  $q2->where('blq.fechaInicio', '<=', $fechaInicio)
+                     ->where('blq.fechaFin', '>=', $fechaFin);
+              });
+        })
+
+        ->select(
+            'f.idFuncionario',
+            DB::raw("CONCAT(f.nombre, ' ', f.apellido) as nombreCompleto"),
+            DB::raw("tpc.nombreTipoContrato as tipoContrato"),
+
+            // 🔥 CÁLCULO DE HORAS
+            DB::raw("
+                SUM(
+                    TIMESTAMPDIFF(HOUR, blq.horaInicio, blq.horaFin)
+                ) as totalHoras
+            ")
+        )
+        ->groupBy('f.idFuncionario', 'f.nombre', 'f.apellido', 'tpc.nombreTipoContrato')
+        ->first();
+    }
 }

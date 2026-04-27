@@ -50,7 +50,7 @@ class AmbienteService
     public function buscarAmbiente(int $idSede, string $fechaInicio, string $fechaFin, string $horaInicio, string $horaFin): array
 {
     return DB::table('ambiente as a')
-        ->join('area as ar', 'a.idArea', '=', 'ar.idArea') // 🔥 JOIN
+        ->join('area as ar', 'a.idArea', '=', 'ar.idArea') 
 
         ->where('a.idSede', $idSede)
         ->where('a.estado', 'Activo')

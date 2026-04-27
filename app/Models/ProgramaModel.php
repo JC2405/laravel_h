@@ -9,7 +9,7 @@ class ProgramaModel extends Model
     protected $table = 'programa';
     protected $primaryKey = 'idPrograma';
     public $timestamps = false;
-    protected $fillable = ['nombre','codigo','version','estado','idTipoFormacion'];
+    protected $fillable = ['nombre','codigo','version','estado','idTipoFormacion','idArea'];
 
 
     public function tipoFormacion() {
@@ -20,5 +20,8 @@ class ProgramaModel extends Model
     }
     public function competencias() {
         return $this->hasMany(CompetenciaModel::class, 'idPrograma', 'idPrograma');
+    }
+    public function area(){
+        return $this->belongsTo(AreaModel::class, 'idArea', 'idArea');
     }
 }

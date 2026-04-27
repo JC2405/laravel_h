@@ -95,7 +95,9 @@ Route::get('listarFuncionatioXDocumento/{documento}',[FuncionarioController::cla
 Route::delete('eliminarFuncionario/{idFuncionario}',[FuncionarioController::class,'destroy']);
 Route::post('crearAdmin',[FuncionarioController::class,'crearAdmin']);
 Route::post('asignar-area-masivo', [FuncionarioController::class, 'asignarAreaMasivo']);
-
+Route::post('contarHorasInstructor/{idFuncionario}',[FuncionarioController::class,'contarHorasInstructor']);
+Route::post('conflicto/reemplazar', [HorarioController::class, 'resolverReemplazando']);
+Route::post('conflicto/partir',     [HorarioController::class, 'resolverPartiendo']);
 
 Route::get('listarAmbiente',[AmbienteController::class,'index']);
 Route::post('crearAmbiente',[AmbienteController::class,'store']);
@@ -158,7 +160,7 @@ Route::get('listarResultado',[ResultadoController::class,'index']);
 Route::post('crearResultado',[ResultadoController::class,'store']);
 Route::get('obtenerResultadoXId/{idResultado}',[ResultadoController::class,'show']);
 Route::put('editarResultado/{idResultado}',[ResultadoController::class,'update']);
-Route::delete(' /{idResultado}',[ResultadoController::class,'destroy']);
+Route::delete('/{idResultado}',[ResultadoController::class,'destroy']);
 Route::get('exportar/resultados/{idTipoFormacion?}', [ExcelController::class, 'exportarResultados']);
 Route::post('importar/resultados', [ExcelController::class, 'importarResultados']);
 

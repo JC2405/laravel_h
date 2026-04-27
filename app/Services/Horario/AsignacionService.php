@@ -2,6 +2,7 @@
 
 namespace App\Services\Horario;
 
+use App\Exceptions\ConflictoException;
 use App\Models\AsignacionModel;
 use App\Models\BloqueHorarioModel;
 use App\Services\Ficha\FichaService;
@@ -28,7 +29,7 @@ class AsignacionService
 
         $error = $this->validar($datos);
         if ($error) return $error;
-    
+
         try {
             $asignacion = DB::transaction(function () use ($datos) {
 
@@ -54,8 +55,22 @@ class AsignacionService
 
             return ['ok' => true, 'asignacion' => $asignacion];
 
-        } catch (RuntimeException $e) {
-            return $this->respuestaError('CONFLICTO', $e->getMessage(), 409);
+        } catch (ConflictoException $e) {
+
+            return [
+                'ok'         => false,
+                'tipo'       => $e->tipo,
+                'mensaje'    => $e->mensaje,
+                'codigoFicha'=> $e->codigoFicha,
+                // Datos que el frontend necesita para mostrar las dos opciones
+                'conflicto'  => [
+                    'idBloque'   => $e->idBloque,
+                    'horaInicio' => $e->horaInicio,
+                    'horaFin'    => $e->horaFin,
+                ],
+                'http'       => 409,
+            ];
+
         } catch (Throwable $e) {
             return $this->respuestaError('ERROR', $e->getMessage(), 500);
         }
@@ -82,7 +97,6 @@ class AsignacionService
         return ['ok' => true];
     }
 
-    
     public function eliminarAsignacionesYBloques(int $idFicha): void
     {
         AsignacionModel::with('bloque.dias')
@@ -96,8 +110,6 @@ class AsignacionService
             });
     }
 
-
-  
     // ================================
     // ELIMINAR DÍA DE BLOQUE
     // ================================
@@ -139,6 +151,79 @@ class AsignacionService
     }
 
     // ================================
+    // RESOLVER CONFLICTO — REEMPLAZAR
+    // Borra el bloque conflictivo y crea la nueva asignación
+    // ================================
+    public function resolverReemplazando(int $idBloque, array $datosNuevaAsig): array
+    {
+        try {
+            return DB::transaction(function () use ($idBloque, $datosNuevaAsig) {
+
+                $bloque = BloqueHorarioModel::with('dias')->findOrFail($idBloque);
+                $idAsignacion = $bloque->idAsignacion;
+
+                $this->eliminarBloqueCompleto($bloque);
+
+                // Si la asignación quedó sin bloques, también la eliminamos
+                if (!BloqueHorarioModel::where('idAsignacion', $idAsignacion)->exists()) {
+                    AsignacionModel::where('idAsignacion', $idAsignacion)->delete();
+                }
+
+                return $this->crearAsignacion($datosNuevaAsig);
+            });
+
+        } catch (Throwable $e) {
+            return $this->respuestaError('ERROR', $e->getMessage(), 500);
+        }
+    }
+
+    // ================================
+    // RESOLVER CONFLICTO — PARTIR
+    // Acorta el bloque existente y crea la nueva asignación a continuación
+    // Ej: Gustavo 06:00-12:00 → queda 06:00-08:00 | nueva ficha 08:00-12:00
+    // ================================
+    public function resolverPartiendo(int $idBloque, string $nuevaHoraInicio, array $datosNuevaAsig): array
+    {
+        try {
+            return DB::transaction(function () use ($idBloque, $nuevaHoraInicio, $datosNuevaAsig) {
+
+                $bloque = BloqueHorarioModel::findOrFail($idBloque);
+
+                if ($nuevaHoraInicio <= $bloque->horaInicio || $nuevaHoraInicio >= $bloque->horaFin) {
+                    return $this->respuestaError(
+                        'HORA_INVALIDA',
+                        "La hora de corte ({$nuevaHoraInicio}) debe estar entre {$bloque->horaInicio} y {$bloque->horaFin}.",
+                        422
+                    );
+                }
+
+                // Acortar el bloque existente
+                $horaFinOriginal = $bloque->horaFin;
+                $bloque->update(['horaFin' => $nuevaHoraInicio]);
+
+                // Crear la nueva asignación
+                $res = $this->crearAsignacion($datosNuevaAsig);
+
+                if (!$res['ok']) {
+                    return $res;
+                }
+
+                return array_merge($res, [
+                    'bloqueAcortado' => [
+                        'idBloque'         => $bloque->idBloque,
+                        'horaInicio'       => $bloque->horaInicio,
+                        'horaFinAnterior'  => $horaFinOriginal,
+                        'horaFinNueva'     => $nuevaHoraInicio,
+                    ],
+                ]);
+            });
+
+        } catch (Throwable $e) {
+            return $this->respuestaError('ERROR', $e->getMessage(), 500);
+        }
+    }
+
+    // ================================
     // CONSULTAS
     // ================================
     public function listarAsignacionesPorFicha(int $idFicha): array
@@ -167,18 +252,17 @@ class AsignacionService
         ];
     }
 
-
     public function listarClasesPorAmbiente(int $idAmbiente): array
     {
-        $asignaciones = AsignacionModel::with(['bloque.dias', 'funcionario' , 'ambiente', 'ficha.programa'])
-           ->where('idAmbiente', $idAmbiente)
-           ->get();
-           
-           return [
-                'ok' => true,
-                'asignaciones' => $asignaciones,
-                'grilla' => $this->grillaService->construirGrillaParaAmbiente($asignaciones),
-           ];
+        $asignaciones = AsignacionModel::with(['bloque.dias', 'funcionario', 'ambiente', 'ficha.programa'])
+            ->where('idAmbiente', $idAmbiente)
+            ->get();
+
+        return [
+            'ok'           => true,
+            'asignaciones' => $asignaciones,
+            'grilla'       => $this->grillaService->construirGrillaParaAmbiente($asignaciones),
+        ];
     }
     // ================================
     // DASHBOARD
@@ -228,9 +312,6 @@ class AsignacionService
         $bloque->delete();
     }
 
-
-
-
     // ================================
     // VALIDACIONES
     // ================================
@@ -252,15 +333,11 @@ class AsignacionService
             return $this->respuestaError('AMBIENTE_REQUERIDO', 'Ambiente requerido');
         }
 
-         $errorFicha = $this->validarFechasDentroDeFicha($datos);
+        $errorFicha = $this->validarFechasDentroDeFicha($datos);
         if ($errorFicha) return $errorFicha;
-
 
         return null;
     }
-
-
-    
 
     // ================================
     // CONFLICTOS
@@ -278,7 +355,20 @@ class AsignacionService
         );
 
         if ($conflictoInstructor) {
-            throw new RuntimeException('Instructor ocupado', 409);
+            throw new ConflictoException(
+                tipo:        'conflicto_instructor',
+                mensaje:     sprintf(
+                    "El instructor %s ya está asignado en la ficha %s en el horario %s - %s",
+                    $conflictoInstructor->instructor_nombre,
+                    $conflictoInstructor->codigoFicha,
+                    $conflictoInstructor->horaInicio,
+                    $conflictoInstructor->horaFin
+                ),
+                codigoFicha: $conflictoInstructor->codigoFicha,
+                idBloque:    $conflictoInstructor->idBloque,
+                horaInicio:  $conflictoInstructor->horaInicio,
+                horaFin:     $conflictoInstructor->horaFin,
+            );
         }
 
         if (!empty($datos['idAmbiente'])) {
@@ -293,40 +383,48 @@ class AsignacionService
             );
 
             if ($conflictoAmbiente) {
-                throw new RuntimeException('Ambiente ocupado', 409);
+                throw new ConflictoException(
+                    tipo:        'conflicto_ambiente',
+                    mensaje:     sprintf(
+                        "El ambiente está ocupado en la ficha %s en el horario %s - %s",
+                        $conflictoAmbiente->codigoFicha,
+                        $conflictoAmbiente->horaInicio,
+                        $conflictoAmbiente->horaFin
+                    ),
+                    codigoFicha: $conflictoAmbiente->codigoFicha,
+                    idBloque:    $conflictoAmbiente->idBloque,
+                    horaInicio:  $conflictoAmbiente->horaInicio,
+                    horaFin:     $conflictoAmbiente->horaFin,
+                );
             }
         }
     }
 
     public function validarFechasDentroDeFicha(array $datos): ?array
-{
-    $ficha = $this->fichaService->findById($datos['idFicha']);
+    {
+        $ficha = $this->fichaService->findById($datos['idFicha']);
 
-    if (!$ficha) {
-        return $this->respuestaError('FICHA_NO_ENCONTRADA', 'La ficha no existe.', 404);
+        if (!$ficha) {
+            return $this->respuestaError('FICHA_NO_ENCONTRADA', 'La ficha no existe.', 404);
+        }
+
+        $inicioBloque = $datos['fechaInicioPeriodo'];
+        $finBloque    = $datos['fechaFinPeriodo'];
+        $inicioFicha  = $ficha->fechaInicio;
+        $finFicha     = $ficha->fechaFin;
+
+        $dentroDelRango = $inicioBloque >= $inicioFicha && $finBloque <= $finFicha;
+
+        if (!$dentroDelRango) {
+            return $this->respuestaError(
+                'FECHA_FUERA_DE_RANGO',
+                "Las fechas del horario ({$inicioBloque} → {$finBloque}) deben estar dentro del período de la ficha ({$inicioFicha} → {$finFicha}).",
+                422
+            );
+        }
+
+        return null;
     }
-
-    $inicioBloque = $datos['fechaInicioPeriodo'];
-    $finBloque    = $datos['fechaFinPeriodo'];
-    $inicioFicha  = $ficha->fechaInicio; // ajusta al nombre real de tu columna
-    $finFicha     = $ficha->fechaFin;
-
-    // El bloque debe estar DENTRO del período de la ficha (BETWEEN)
-    $dentroDelRango = $inicioBloque >= $inicioFicha && $finBloque <= $finFicha;
-
-    if (!$dentroDelRango) {
-        return $this->respuestaError(
-            'FECHA_FUERA_DE_RANGO',
-            "Las fechas del horario ({$inicioBloque} → {$finBloque}) deben estar dentro del período de la ficha ({$inicioFicha} → {$finFicha}).",
-            422
-        );
-    }
-
-    return null;    
-    }
-
-
-
 
     // ================================
     // UTILS
@@ -338,30 +436,24 @@ class AsignacionService
             : $datos['idAmbiente'];
     }
 
-
-
-
     private function normalizarDatosEntrada(array $datos): array
     {
         return [
-            'idInstructor'       => $datos['idFuncionario']   ?? $datos['id_funcionario']    ?? null,
-            'idFicha'            => $datos['idFicha']         ?? $datos['id_ficha']          ?? null,
-            'idAmbiente'         => $datos['idAmbiente']      ?? $datos['id_ambiente']       ?? null,
-            'modalidad'          => $datos['modalidad']                                      ?? null,
-            'estado'             => $datos['estado']                                         ?? 'activo',
-            'tipoFormacion'      => $datos['tipoFormacion']   ?? $datos['tipoFormacion']     ?? null,
-            'observaciones'      => $datos['observaciones']   ?? $datos['observacion']       ?? null,
-            'diasDeLaSemana'     => $datos['dias']                                           ?? [],
-            'fechaInicioPeriodo' => $datos['fechaInicio']     ?? $datos['fecha_inicio']      ?? null,
-            'fechaFinPeriodo'    => $datos['fechaFin']        ?? $datos['fecha_fin']         ?? null,
-            'horaInicioClase'    => $datos['horaInicio']      ?? $datos['hora_inicio']       ?? null,
-            'horaFinClase'       => $datos['horaFin']         ?? $datos['hora_fin']          ?? null,
+            'idInstructor'       => $datos['idFuncionario']   ?? $datos['id_funcionario']  ?? null,
+            'idFicha'            => $datos['idFicha']         ?? $datos['id_ficha']        ?? null,
+            'idAmbiente'         => $datos['idAmbiente']      ?? $datos['id_ambiente']     ?? null,
+            'modalidad'          => $datos['modalidad']                                    ?? null,
+            'estado'             => $datos['estado']                                       ?? 'activo',
+            'tipoFormacion'      => $datos['tipoFormacion']                                ?? null,
+            'observaciones'      => $datos['observaciones']   ?? $datos['observacion']     ?? null,
+            'diasDeLaSemana'     => $datos['dias']                                         ?? [],
+            'fechaInicioPeriodo' => $datos['fechaInicio']     ?? $datos['fecha_inicio']    ?? null,
+            'fechaFinPeriodo'    => $datos['fechaFin']        ?? $datos['fecha_fin']       ?? null,
+            'horaInicioClase'    => $datos['horaInicio']      ?? $datos['hora_inicio']     ?? null,
+            'horaFinClase'       => $datos['horaFin']         ?? $datos['hora_fin']        ?? null,
         ];
     }
 
-
-
-    
     private function respuestaError(string $codigo, string $mensaje, int $http = 422): array
     {
         return [

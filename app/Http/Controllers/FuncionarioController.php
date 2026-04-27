@@ -120,4 +120,19 @@ class FuncionarioController extends Controller
             'inserted_count' => $insertedCount
         ]);
     }
+
+
+    public function contarHorasInstructor($idFuncionario, Request $request)
+    {
+        $fechaInicio = $request->fechaInicio;
+        $fechaFin = $request->fechaFin;
+    
+        $respuesta = $this->service->countHorasFuncionario(
+            $idFuncionario,
+            $fechaInicio,
+            $fechaFin
+        );
+    
+        return response()->json($respuesta);
+    }
 }
