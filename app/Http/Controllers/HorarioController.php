@@ -86,8 +86,8 @@ class HorarioController extends Controller
     public function resolverReemplazando(Request $request)
     {
         $request->validate(['idBloque' => 'required|integer|exists:bloque,idBloque']);
-
-        $idBloque       = $request->input('idBloque');
+        
+        $idBloque= $request->input('idBloque');
         $datosNuevaAsig = $request->except('idBloque');
 
         $res = $this->asignaciones->resolverReemplazando($idBloque, $datosNuevaAsig);
@@ -114,28 +114,31 @@ class HorarioController extends Controller
      *   ...resto igual que crearAsignacion
      * }
      */
-    public function resolverPartiendo(Request $request)
-    {
-        $request->validate([
-            'idBloque'        => 'required|integer|exists:bloque,idBloque',
-            'nuevaHoraInicio' => 'required|date_format:H:i,H:i:s',
-        ]);
+  public function resolverPartiendo(Request $request)
+{
+    $request->validate([
+        'idBloque'        => 'required|integer|exists:bloque,idBloque',
+        'nuevaHoraInicio' => 'required|date_format:H:i:s',
+        'nuevaHoraFin'    => 'nullable|date_format:H:i:s',
+    ]);
 
-        $idBloque        = $request->input('idBloque');
-        $nuevaHoraInicio = $request->input('nuevaHoraInicio');
-        $datosNuevaAsig  = $request->except(['idBloque', 'nuevaHoraInicio']);
+    $idBloque        = $request->input('idBloque');
+    $nuevaHoraInicio = $request->input('nuevaHoraInicio');
+    $nuevaHoraFin    = $request->input('nuevaHoraFin'); // null si no viene
+    $datosNuevaAsig  = $request->except(['idBloque', 'nuevaHoraInicio', 'nuevaHoraFin']);
 
-        $res = $this->asignaciones->resolverPartiendo($idBloque, $nuevaHoraInicio, $datosNuevaAsig);
+    $res = $this->asignaciones->resolverPartiendo($idBloque, $nuevaHoraInicio, $datosNuevaAsig, $nuevaHoraFin);
 
-        if (!$res['ok']) {
-            return $this->error($res['mensaje'], $res['http'] ?? 422);
-        }
-
-        return $this->success([
-            'asignacionNueva' => $res['asignacion'],
-            'bloqueAcortado'  => $res['bloqueAcortado'],
-        ], 'Conflicto resuelto: bloque acortado y nueva asignación creada.', 201);
+    if (!$res['ok']) {
+        return $this->error($res['mensaje'], $res['http'] ?? 422);
     }
+
+    return $this->success([
+        'asignacionNueva' => $res['asignacion'],
+        'bloqueAcortado'  => $res['bloqueAcortado'],
+        'bloqueCola'      => $res['bloqueCola'] ?? null,
+    ], 'Conflicto resuelto: bloque partido correctamente.', 201);
+}
 
     // ================================
     // CONSULTAS DE HORARIOS (GRILLAS)

@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Services\Horario;
-
+use Illuminate\Support\Facades\Log;
 use App\Exceptions\ConflictoException;
 use App\Models\AsignacionModel;
 use App\Models\BloqueHorarioModel;
@@ -182,46 +182,73 @@ class AsignacionService
     // Acorta el bloque existente y crea la nueva asignación a continuación
     // Ej: Gustavo 06:00-12:00 → queda 06:00-08:00 | nueva ficha 08:00-12:00
     // ================================
-    public function resolverPartiendo(int $idBloque, string $nuevaHoraInicio, array $datosNuevaAsig): array
-    {
-        try {
-            return DB::transaction(function () use ($idBloque, $nuevaHoraInicio, $datosNuevaAsig) {
+  public function resolverPartiendo(int $idBloque, string $nuevaHoraInicio, array $datosNuevaAsig, ?string $nuevaHoraFin = null): array
+{
+    try {
+        return DB::transaction(function () use ($idBloque, $nuevaHoraInicio, $nuevaHoraFin, $datosNuevaAsig) {
 
-                $bloque = BloqueHorarioModel::findOrFail($idBloque);
+            $bloque = BloqueHorarioModel::with('dias')->findOrFail($idBloque);
 
-                if ($nuevaHoraInicio <= $bloque->horaInicio || $nuevaHoraInicio >= $bloque->horaFin) {
-                    return $this->respuestaError(
-                        'HORA_INVALIDA',
-                        "La hora de corte ({$nuevaHoraInicio}) debe estar entre {$bloque->horaInicio} y {$bloque->horaFin}.",
-                        422
-                    );
-                }
+            if ($nuevaHoraInicio <= $bloque->horaInicio || $nuevaHoraInicio >= $bloque->horaFin) {
+                return $this->respuestaError('HORA_INVALIDA', "La hora de corte ({$nuevaHoraInicio}) debe estar entre {$bloque->horaInicio} y {$bloque->horaFin}.", 422);
+            }
 
-                // Acortar el bloque existente
-                $horaFinOriginal = $bloque->horaFin;
-                $bloque->update(['horaFin' => $nuevaHoraInicio]);
+            $horaFinOriginal  = $bloque->horaFin;
+            $diasOriginales   = $bloque->dias->pluck('idDia')->toArray();
+            $idAsignacionOrig = $bloque->idAsignacion;
 
-                // Crear la nueva asignación
-                $res = $this->crearAsignacion($datosNuevaAsig);
+            // 1. Acortar el bloque existente
+            $bloque->update(['horaFin' => $nuevaHoraInicio]);
 
-                if (!$res['ok']) {
-                    return $res;
-                }
+            // 2. ← LÍNEA NUEVA: excluir el bloque recién acortado para que
+            //    crearAsignacion no lo detecte como conflicto
+            $datosNuevaAsig['excluirBloque'] = $bloque->idBloque;
 
-                return array_merge($res, [
-                    'bloqueAcortado' => [
-                        'idBloque'         => $bloque->idBloque,
-                        'horaInicio'       => $bloque->horaInicio,
-                        'horaFinAnterior'  => $horaFinOriginal,
-                        'horaFinNueva'     => $nuevaHoraInicio,
-                    ],
+            // 3. Crear nueva asignación
+            $res = $this->crearAsignacion($datosNuevaAsig);
+
+            if (!$res['ok']) {
+                return $res;
+            }
+
+            $resultado = array_merge($res, [
+                'bloqueAcortado' => [
+                    'idBloque'        => $bloque->idBloque,
+                    'horaInicio'      => $bloque->horaInicio,
+                    'horaFinAnterior' => $horaFinOriginal,
+                    'horaFinNueva'    => $nuevaHoraInicio,
+                ],
+            ]);
+
+            // 4. Crear bloque "cola" (10:00 - 11:59) si aplica
+            if ($nuevaHoraFin !== null && $nuevaHoraFin < $horaFinOriginal) {
+                $bloqueCola = BloqueHorarioModel::create([
+                    'idAsignacion'  => $idAsignacionOrig,
+                    'fechaInicio'   => $bloque->fechaInicio,
+                    'fechaFin'      => $bloque->fechaFin,
+                    'horaInicio'    => $nuevaHoraFin,
+                    'horaFin'       => $horaFinOriginal,
+                    'tipoFormacion' => $bloque->tipoFormacion,
+                    'estado'        => $bloque->estado,
+                    'observaciones' => $bloque->observaciones,
                 ]);
-            });
 
-        } catch (Throwable $e) {
-            return $this->respuestaError('ERROR', $e->getMessage(), 500);
-        }
+                $bloqueCola->dias()->attach($diasOriginales);
+
+                $resultado['bloqueCola'] = [
+                    'idBloque'   => $bloqueCola->idBloque,
+                    'horaInicio' => $nuevaHoraFin,
+                    'horaFin'    => $horaFinOriginal,
+                ];
+            }
+
+            return $resultado;
+        });
+
+    } catch (Throwable $e) {
+        return $this->respuestaError('ERROR', $e->getMessage(), 500);
     }
+}
 
     // ================================
     // CONSULTAS
@@ -351,6 +378,7 @@ class AsignacionService
             $datos['diasDeLaSemana'],
             $datos['fechaInicioPeriodo'],
             $datos['fechaFinPeriodo'],
+            excluirBloque: $datos['excluirBloque'] ?? null,
             excluirFicha: $datos['idFicha']
         );
 
@@ -379,7 +407,8 @@ class AsignacionService
                 $datos['diasDeLaSemana'],
                 $datos['fechaInicioPeriodo'],
                 $datos['fechaFinPeriodo'],
-                excluirFicha: $datos['idFicha']
+                excluirFicha: $datos['idFicha'],
+                excluirBloque: $datos['excluirBloque'] ?? null
             );
 
             if ($conflictoAmbiente) {
@@ -451,6 +480,7 @@ class AsignacionService
             'fechaFinPeriodo'    => $datos['fechaFin']        ?? $datos['fecha_fin']       ?? null,
             'horaInicioClase'    => $datos['horaInicio']      ?? $datos['hora_inicio']     ?? null,
             'horaFinClase'       => $datos['horaFin']         ?? $datos['hora_fin']        ?? null,
+            'excluirBloque' => $datos['excluirBloque'] ?? null,
         ];
     }
 
