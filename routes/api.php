@@ -132,15 +132,15 @@ Route::delete('eliminarDiaDeBloque/{idBloque}/{idDia}', [HorarioController::clas
 Route::get('horariosPorAmbiente/{idAmbiente}',[HorarioController::class,'horariosPorAmbiente']);
 Route::get('horarioPorInstructor/{idFuncionario}',[HorarioController::class,'listarFuncionarioPorHorario']); 
 
-Route::get('exportar/funcionarios',                [ExcelController::class, 'exportarFuncionarios']);
-Route::get('exportar/fichas',                      [ExcelController::class, 'exportarFichas']);
-Route::get('exportar/aprendices',                  [ExcelController::class, 'exportarAprendices']);
-Route::get('exportar/aprendices/{idFicha}',        [ExcelController::class, 'exportarAprendicesDeFicha']);
-Route::get('exportar/programas',                   [ExcelController::class, 'exportarProgramas']);
- 
+Route::get('exportar/funcionarios',[ExcelController::class, 'exportarFuncionarios']);
+Route::get('exportar/fichas',[ExcelController::class, 'exportarFichas']);
+Route::get('exportar/aprendices',[ExcelController::class, 'exportarAprendices']);
+Route::get('exportar/aprendices/{idFicha}',[ExcelController::class, 'exportarAprendicesDeFicha']);
+Route::get('exportar/programas',[ExcelController::class, 'exportarProgramas']);
+
 // ── Imports — el frontend hace POST con multipart/form-data ───────────────────
-Route::post('importar/funcionarios',               [ExcelController::class, 'importarFuncionarios']);
-Route::post('importar/aprendices',                 [ExcelController::class, 'importarAprendices']);
+Route::post('importar/funcionarios',[ExcelController::class, 'importarFuncionarios']);
+Route::post('importar/aprendices',[ExcelController::class, 'importarAprendices']);
 
 
 // Competencias
@@ -160,7 +160,7 @@ Route::get('listarResultado',[ResultadoController::class,'index']);
 Route::post('crearResultado',[ResultadoController::class,'store']);
 Route::get('obtenerResultadoXId/{idResultado}',[ResultadoController::class,'show']);
 Route::put('editarResultado/{idResultado}',[ResultadoController::class,'update']);
-Route::delete('/{idResultado}',[ResultadoController::class,'destroy']);
+Route::delete('eliminarResultado/{idResultado}',[ResultadoController::class,'destroy']);
 Route::get('exportar/resultados/{idTipoFormacion?}', [ExcelController::class, 'exportarResultados']);
 Route::post('importar/resultados', [ExcelController::class, 'importarResultados']);
 

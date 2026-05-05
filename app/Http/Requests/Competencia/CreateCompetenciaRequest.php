@@ -22,10 +22,10 @@ class CreateCompetenciaRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nombreCompetencia' => 'required|string|max:255',
-            'codigo' => 'required|string|max:255',
-            'tipo' => 'required|string|max:255',
-            'idTipoFormacion'=>'required|integer|exists:tipoFormacion,idTipoFormacion',
+                'nombreCompetencia' => 'required|string|max:255',
+                'codigo' => 'required|string|max:255',
+                'tipo' => 'required|string|max:255',
+                'idTipoFormacion'=>'required|integer|exists:tipoFormacion,idTipoFormacion',
         ];
     }
 }

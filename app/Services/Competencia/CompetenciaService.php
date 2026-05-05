@@ -8,11 +8,16 @@ use Illuminate\Database\Eloquent\Collection;
 
 class CompetenciaService
 {
-    public function getAll(): Collection
+    public function getAll(?int $idTipoFormacion = null): Collection
     {
-        return CompetenciaModel::orderBy('idCompetencia')->get();
+        $query = CompetenciaModel::orderBy('idCompetencia');
+        if ($idTipoFormacion !== null) {
+            $query->where('idTipoFormacion', $idTipoFormacion);
+        }
+        return $query->get();
     }
 
+    
 
     public function create(array $data):CompetenciaModel
     {

@@ -15,9 +15,10 @@ class ResultadoController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $listarResultado = $this->service->getAll();
+        $idTipoFormacion = $request->query('idTipoFormacion') ? (int) $request->query('idTipoFormacion') : null;
+        $listarResultado = $this->service->getAll($idTipoFormacion);
         return response()->json($listarResultado);
     }
 

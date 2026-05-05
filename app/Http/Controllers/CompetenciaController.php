@@ -6,15 +6,17 @@ use App\Http\Requests\Competencia\CreateCompetenciaRequest;
 use App\Http\Requests\Competencia\UpdateCompetenciaRequest;
 use App\Models\CompetenciaModel;
 use App\Services\Competencia\CompetenciaService;
+use Illuminate\Http\Request;
 
 class CompetenciaController extends Controller
 {
     public function __construct(protected CompetenciaService $service){}
 
     
-    public function index()
+    public function index(Request $request)
     {
-        $listarCompetencia = $this->service->getAll();
+        $idTipoFormacion = $request->query('idTipoFormacion') ? (int) $request->query('idTipoFormacion') : null;
+        $listarCompetencia = $this->service->getAll($idTipoFormacion);
         return response()->json($listarCompetencia);
     }
 

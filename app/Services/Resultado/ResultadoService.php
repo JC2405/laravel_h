@@ -6,9 +6,15 @@ use Illuminate\Database\Eloquent\Collection;
 
 class ResultadoService
 {
-    public function getAll():Collection
+    public function getAll(?int $idTipoFormacion = null):Collection
     {
-        return ResultadoModel::orderBy('idResultado')->get();
+        $query = ResultadoModel::orderBy('idResultado');
+        if($idTipoFormacion !== null) {
+            $query->join('competencia', 'resultado.idCompetencia', '=', 'competencia.idCompetencia')
+                  ->where('competencia.idTipoFormacion', $idTipoFormacion)
+                  ->select('resultado.*');
+        }
+        return $query->get();
     }
 
     public function create(array $data):ResultadoModel
