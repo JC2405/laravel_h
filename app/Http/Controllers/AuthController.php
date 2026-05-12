@@ -4,10 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Auth\LoginRequest;
 use App\Services\Auth\AuthService;
+use App\Services\Funcionario\FuncionarioService;
+use Tymon\JWTAuth\Exceptions\JWTException;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
 {
-    public function __construct(protected AuthService $service)
+    public function __construct(protected AuthService $service, protected FuncionarioService $funcionario)
     {
     }
 
@@ -23,10 +26,16 @@ class AuthController extends Controller
         return response()->json($resultado, 200);
     }
 
-    /** POST /api/auth/logout */
+    /** POST /api/logout */
     public function logout()
     {
-        $this->service->logout();
+        try {
+            $token = JWTAuth::parseToken();
+            $this->service->logout();
+        } catch (JWTException $e) {
+            return response()->json(['message' => 'Sesion Expirada Te esperamos Pronto']);
+        }
+
         return response()->json(['message' => 'Sesión cerrada correctamente.']);
     }
 
@@ -54,27 +63,17 @@ class AuthController extends Controller
         $funcionario->load('roles');
 
         return response()->json([
-            'id' => $funcionario->idFuncionario,
-            'nombre' => $funcionario->nombre,
-            'correo' => $funcionario->correo,
-            'rol' => $funcionario->roles->first()?->nombreRol,
+            'id'            => $funcionario->idFuncionario,
+            'nombre'        => $funcionario->nombre,
+            'apellido'      => $funcionario->apellido,
+            'documento'     => $funcionario->documento,
+            'correo'        => $funcionario->correo,
+            'telefono'      => $funcionario->telefono,  
+            'estado'        => $funcionario->estado,
+            'idTipoContrato'=> $funcionario->idTipoContrato,
+            'rol'           => $funcionario->roles->first()?->nombreRol,
         ]);
     }
 
-    /** GET /api/sidebar */
-    public function sidebar()
-    {
-        $funcionario = auth('funcionario')->user();
 
-        if (!$funcionario) {
-            return response()->json(['message' => 'No autenticado.'], 401);
-        }
-
-        $funcionario->load('roles'); // ✅ load en lugar de loadMissing
-
-        $rol = strtolower($funcionario->roles->first()?->nombreRol ?? '');
-        $items = $this->service->getSidebarPorRol($rol);
-
-        return response()->json(['rol' => $rol, 'sidebar' => $items]);
-    }
 }

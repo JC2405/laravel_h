@@ -40,7 +40,6 @@ class AuthService
         }
 
         $rolModel  = $funcionario->roles->first();
-        // La columna en la tabla 'rol' se llama 'rol' (no 'nombreRol')
         $nombreRol = $rolModel ? strtolower(trim($rolModel->rol)) : null;
 
         return [

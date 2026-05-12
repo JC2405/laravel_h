@@ -121,7 +121,7 @@ class FuncionarioService
         ->join('tipoContrato as tpc', 'tpc.idTipoContrato', '=', 'f.idTipoContrato')
         ->where('f.idFuncionario', $idFuncionario)
 
-        // 🔥 FILTRO CORRECTO DE RANGO
+  
         ->where(function ($q) use ($fechaInicio, $fechaFin) {
             $q->whereBetween('blq.fechaInicio', [$fechaInicio, $fechaFin])
               ->orWhereBetween('blq.fechaFin', [$fechaInicio, $fechaFin])
@@ -136,7 +136,6 @@ class FuncionarioService
             DB::raw("CONCAT(f.nombre, ' ', f.apellido) as nombreCompleto"),
             DB::raw("tpc.nombreTipoContrato as tipoContrato"),
 
-            // 🔥 CÁLCULO DE HORAS
             DB::raw("
                 SUM(
                     TIMESTAMPDIFF(HOUR, blq.horaInicio, blq.horaFin)
@@ -146,4 +145,5 @@ class FuncionarioService
         ->groupBy('f.idFuncionario', 'f.nombre', 'f.apellido', 'tpc.nombreTipoContrato')
         ->first();
     }
+
 }
