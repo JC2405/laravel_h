@@ -46,6 +46,7 @@ class FichaService
         return FichaModel::find($idFicha);
     }
 
+
     public function show($codigoFicha)
     {
         return FichaModel::where('codigoFicha', $codigoFicha)->firstOrFail();

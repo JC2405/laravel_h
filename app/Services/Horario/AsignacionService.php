@@ -493,4 +493,47 @@ class AsignacionService
             'http'    => $http,
         ];
     }
+
+  public function dashboardCharts(int $anio): array
+{
+    // ── Horarios por mes (año filtrado) ──────────────────────────────
+    $porMes = DB::table('bloque as b')                                    // ← era bloque_horario
+        ->join('asignacion as a', 'a.idAsignacion', '=', 'b.idAsignacion')
+        ->whereYear('b.fechaInicio', $anio)
+        ->selectRaw('MONTH(b.fechaInicio) as mes, COUNT(DISTINCT a.idAsignacion) as total')
+        ->groupByRaw('MONTH(b.fechaInicio)')
+        ->orderBy('mes')
+        ->get()
+        ->keyBy('mes');
+
+    $meses = [];
+    for ($m = 1; $m <= 12; $m++) {
+        $meses[] = (int) ($porMes[$m]->total ?? 0);
+    }
+
+    // ── Fichas con/sin horarios ──────────────────────────────────────
+    $totalFichas      = DB::table('ficha')->count();
+    $fichasConHorario = DB::table('ficha')
+        ->whereExists(fn($q) =>
+            $q->select(DB::raw(1))
+              ->from('asignacion')
+              ->whereColumn('asignacion.idFicha', 'ficha.idFicha')        // ← whereColumn necesita select
+        )
+        ->count();
+    $fichasSinHorario = $totalFichas - $fichasConHorario;
+
+    // ── Años disponibles ─────────────────────────────────────────────
+    $aniosDisponibles = DB::table('bloque')                               // ← era bloque_horario
+        ->selectRaw('DISTINCT YEAR(fechaInicio) as anio')
+        ->orderByDesc('anio')
+        ->pluck('anio');
+
+    return [
+        'horarios_por_mes'   => $meses,
+        'fichas_con_horario' => $fichasConHorario,
+        'fichas_sin_horario' => $fichasSinHorario,
+        'anios_disponibles'  => $aniosDisponibles,
+        'anio_consultado'    => $anio,
+    ];
+    }
 }

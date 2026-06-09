@@ -22,13 +22,13 @@ class updateAprendizRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nombre'=>'required|string|max:255',
-            'documento'=> 'required|string|max:255',
-            'correo'=> 'required|string|max:255',
-            'telefono'=> 'required|string|max:255',
-            'password'=>'required|string|max:255',
-            'estado'=> 'required|string|max:255',
-            'idFicha'=> 'required|integer'
+                 'nombre'=>'required|string|max:255',
+                'apellido' => 'required|string|max:255',
+                'documento'=> 'required|string|max:255',
+                'correo'=> 'required|string|max:255',
+                'telefono'=> 'required|string|max:255',
+                'estado'=> 'required|string|max:255',
+                'idFicha'=> 'required|integer'           
         ];
     }
 }

@@ -254,4 +254,10 @@ class HorarioController extends Controller
             'message' => $message,
         ], $extra), $code);
     }
+
+    public function dashboardCharts(Request $request)
+    {
+        $anio = (int) $request->query('anio', date('Y'));
+        return $this->success($this->asignaciones->dashboardCharts($anio));
+    }
 }

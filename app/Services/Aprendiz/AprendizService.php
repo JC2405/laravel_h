@@ -4,22 +4,27 @@ namespace App\Services\Aprendiz;
 
 use App\Models\AprendizModel;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+
 
 class AprendizService
 {
-    public function getAll()
-    {
-        return AprendizModel::with('ficha')->orderBy('idAprendiz')->get();
+   public function getAll(?string $idFicha = null)
+{
+    $query = AprendizModel::with('ficha')->orderBy('idAprendiz');
+
+    if ($idFicha) {
+        $query->where('idFicha', $idFicha);
     }
 
-    public function store(array $data, string $documento):AprendizModel
+    return $query->get();
+}
+
+    public function store(array $data, string $documento): AprendizModel
     {
-        $data['password'] = $documento;
-
+        $data['password'] = Hash::make($documento); // hashear el documento como contraseña
         $aprendiz = AprendizModel::create($data);
-        
-
-        return $aprendiz ;
+        return $aprendiz;
     }
 
     public function update(AprendizModel $aprendizModel, $data):AprendizModel

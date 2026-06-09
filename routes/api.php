@@ -38,7 +38,7 @@ Route::post('crearArea', [AreaController::class, 'store']);
 Route::get('verArea/{areaModel}', [AreaController::class, 'show']);
 Route::put('editarArea/{areaModel}', [AreaController::class, 'update']);
 Route::delete('eliminarArea/{areaModel}', [AreaController::class, 'destroy']);
-
+Route::get('/dashboard/charts', [HorarioController::class, 'dashboardCharts']);
 
 
 Route::get('listarDia', [DiaController::class, 'index']);

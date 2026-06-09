@@ -16,10 +16,11 @@ class AprendizController extends Controller
 
 
 
-    public function index()
+      public function index(Request $request)
     {
-        $listarAprendiz = $this->service->getAll();
-        return response()->json($listarAprendiz);
+       $idFicha = $request->query('id_ficha');
+       $listarAprendiz = $this->service->getAll($idFicha);
+       return response()->json($listarAprendiz);
     }
 
 
