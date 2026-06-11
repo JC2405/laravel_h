@@ -23,6 +23,12 @@ class FichaController extends Controller
         return response()->json($listarFichas);
     }
 
+    public function obtenerPorCodigoDeFicha(int $codigoFicha)
+    {
+        return FichaModel::where('codigoFicha', $codigoFicha)
+            ->first();
+    }
+
     public function listarFichasProgramaMunicipio($idMunicipio)
     {
         $data = $this->service->countFichasPorProgramaYMunicipio($idMunicipio);

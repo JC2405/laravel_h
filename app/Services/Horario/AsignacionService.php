@@ -7,6 +7,7 @@ use App\Models\AsignacionModel;
 use App\Models\BloqueHorarioModel;
 use App\Services\Ficha\FichaService;
 use App\Services\Funcionario\FuncionarioService;
+use Exception;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
 use Throwable;
@@ -427,6 +428,34 @@ class AsignacionService
                 );
             }
         }
+         if (strtolower(trim($datos['tipoFormacion'] ?? '')) === 'titulada') {
+
+          $conflictoTipoFormacion = $this->conflictos->detectarConflictoTitulada(
+              $datos['idFicha'],
+              $datos['horaInicioClase'],
+              $datos['horaFinClase'],
+              $datos['fechaInicioPeriodo'],
+              $datos['fechaFinPeriodo'],
+              excluirBloque: $datos['excluirBloque'] ?? null
+          );
+
+           if ($conflictoTipoFormacion) {
+                throw new ConflictoException(
+                    tipo:        'conflicto_ambiente',  
+                    mensaje:     sprintf(
+                        "La ficha %s ya tiene asignado formacion Titulada en el horario %s - %s",
+                        $conflictoTipoFormacion->codigoFicha,
+                        $conflictoTipoFormacion->horaInicio,
+                        $conflictoTipoFormacion->horaFin
+                        
+                    ),
+                    codigoFicha: $conflictoTipoFormacion->codigoFicha,
+                    idBloque:    $conflictoTipoFormacion->idBloque,
+                    horaInicio:  $conflictoTipoFormacion->horaInicio,
+                    horaFin:     $conflictoTipoFormacion->horaFin,
+                );
+            }
+      }
     }
 
     public function validarFechasDentroDeFicha(array $datos): ?array

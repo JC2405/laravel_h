@@ -12,7 +12,7 @@ class AreaController extends Controller
 {
     public function __construct(protected AreaService $service){}
 
-    
+   
     public function index()
     {
         $listarArea = $this->service->getAll();

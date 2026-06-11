@@ -168,4 +168,56 @@ class DeteccionConflictoService
             )
             ->first();
     }
+
+
+    // =========================================================================
+//  CONFLICTO DE TITULADA POR FICHA
+// =========================================================================
+
+/**
+ * Una ficha NO puede tener un bloque de titulada en el mismo período de fechas
+ * cuyas horas NO se solapen con el nuevo bloque.
+ *
+ * Es decir: si ya existe un bloque de titulada en Feb→Abr de 06:00–12:00,
+ * solo se permite agregar otro bloque de titulada en ese período si sus horas
+ * se tocan o solapan (ej. 06:00–12:00 sí, pero 12:00–18:00 NO).
+ */
+public function detectarConflictoTitulada(
+    int     $idFicha,
+    string  $horaInicio,
+    string  $horaFin,
+    string  $fechaInicio,
+    string  $fechaFin,
+    ?int    $excluirBloque = null
+) {
+    return DB::table('bloque as blq')
+        ->join('asignacion as asig', 'asig.idAsignacion', '=', 'blq.idAsignacion')
+        ->join('ficha as f',         'f.idFicha',         '=', 'asig.idFicha')
+
+        ->where('asig.idFicha', $idFicha)
+        ->whereRaw("LOWER(blq.tipoFormacion) = 'titulada'")
+
+        // Fechas SÍ se solapan (mismo período)
+        ->where('blq.fechaInicio', '<=', $fechaFin)
+        ->where('blq.fechaFin',    '>=', $fechaInicio)
+
+        // Horas NO se solapan ← esto es lo que bloquea
+        // No se solapan cuando: fin_existente <= inicio_nuevo  OR  inicio_existente >= fin_nuevo
+        ->where(function ($q) use ($horaInicio, $horaFin) {
+            $q->where('blq.horaFin',     '<=', $horaInicio)
+              ->orWhere('blq.horaInicio', '>=', $horaFin);
+        })
+
+        ->when($excluirBloque, fn($q) => $q->where('blq.idBloque', '!=', $excluirBloque))
+
+        ->select(
+            'blq.idBloque',
+            'blq.horaInicio',
+            'blq.horaFin',
+            'blq.fechaInicio',
+            'blq.fechaFin',
+            'f.codigoFicha',
+        )
+        ->first();
+}
 }

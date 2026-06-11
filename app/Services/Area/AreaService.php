@@ -3,8 +3,7 @@
 namespace App\Services\Area;
 
 use App\Models\AreaModel;
-
-
+use App\Models\FuncionarioModel;
 
 class AreaService
 {

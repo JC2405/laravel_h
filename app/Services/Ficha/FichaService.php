@@ -49,7 +49,13 @@ class FichaService
 
     public function show($codigoFicha)
     {
-        return FichaModel::where('codigoFicha', $codigoFicha)->firstOrFail();
+        return FichaModel::with([
+            'programa.tipoFormacion',
+            'programa.area',
+            'sede.municipio',
+        ])
+        ->where('codigoFicha', $codigoFicha)
+        ->firstOrFail();
     }
 
     public function countActivas(): int
