@@ -124,6 +124,18 @@ class FichaService
         ->values();
     }
 
+    public function obtenerFichasPorSede(int $idSede)
+    {
+        return FichaModel::with([
+                'programa.tipoFormacion',
+                'programa.area',
+                'sede.municipio',
+            ])
+            ->where('idSede', $idSede)
+            ->where('estado', 'Activo')
+            ->orderBy('codigoFicha')
+            ->get();
+    }
 
 
     public function obtenerFichasPorProgramaSede(int $idPrograma, int $idSede)

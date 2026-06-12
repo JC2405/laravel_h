@@ -32,6 +32,7 @@ class FuncionarioController extends Controller
     }
 
 
+
     public function obtenerInstructoresPorArea(int $idArea)
     {
             return FuncionarioModel::select(
@@ -45,7 +46,7 @@ class FuncionarioController extends Controller
         ->with('areas:idArea,nombreArea')
         ->orderBy('nombre')
         ->get();
-    
+
     }
 
 

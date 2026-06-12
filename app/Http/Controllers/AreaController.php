@@ -19,6 +19,11 @@ class AreaController extends Controller
         return response()->json($listarArea);
     }
 
+    public function listarAreasTransversales()
+    {
+        return AreaModel::where('Tipo','Transversal')->get();
+    }
+
     /**
      * Show the form for creating a new resource.
      */

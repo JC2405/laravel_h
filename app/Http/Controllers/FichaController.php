@@ -77,10 +77,23 @@ class FichaController extends Controller
         return response()->json($showFicha);
     }
 
-    public function mostarFichaXSede(int $idSede)
+    public function fichasPorSede($idSede)
     {
-        return FichaModel::where('idSede', $idSede)->get(); 
+        try {
+            $fichas = $this->service->obtenerFichasPorSede((int) $idSede);
+
+            return response()->json([
+                'ok'   => true,
+                'data' => $fichas,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'ok'      => false,
+                'message' => 'Error al obtener las fichas de la sede: ' . $e->getMessage(),
+            ], 500);
+        }
     }
+
 
     /**
      * GET /api/programas-por-municipio/{idMunicipio}
