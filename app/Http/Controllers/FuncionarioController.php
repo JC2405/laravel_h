@@ -45,7 +45,7 @@ class FuncionarioController extends Controller
         ->with('areas:idArea,nombreArea')
         ->orderBy('nombre')
         ->get();
-
+    
     }
 
 

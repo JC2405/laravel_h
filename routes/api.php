@@ -113,7 +113,7 @@ Route::put('editarFicha/{idFicha}', [FichaController::class, 'update']);
 Route::delete('eliminarFicha/{idFicha}', [FichaController::class, 'destroy']);
 Route::get('mostratFichaXCodigo/{codigoFicha}', [FichaController::class, 'show']);
 Route::get('obtenerInstructorPorArea/{idArea}',[FuncionarioController::class,'obtenerInstructoresPorArea']);
-
+Route::get('obtenerFichasXsede/{idSede}',[FichaController::class,'mostarFichaXSede']);
 
 
 Route::get('listarAprendiz', [AprendizController::class, 'index']);

@@ -77,6 +77,11 @@ class FichaController extends Controller
         return response()->json($showFicha);
     }
 
+    public function mostarFichaXSede(int $idSede)
+    {
+        return FichaModel::where('idSede', $idSede)->get(); 
+    }
+
     /**
      * GET /api/programas-por-municipio/{idMunicipio}
      * Devuelve los programas distintos que tienen fichas en el municipio indicado.
