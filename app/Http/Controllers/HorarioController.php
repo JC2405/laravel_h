@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Horario\CreateAsignacionRequest;
+use App\Models\BloqueHorarioModel;
 use App\Services\Horario\AsignacionService;
 use App\Services\Horario\MailService;
 use Illuminate\Http\Request;
@@ -35,7 +36,7 @@ class HorarioController extends Controller
             );
         }
 
-        return $this->success($res['asignacion'], 'Asignación creada', 201);
+        return $this->success($request['asignacion'], 'Asignación creada', 201);
     }
 
     public function destroyAsignacion(int $id)
@@ -197,6 +198,15 @@ class HorarioController extends Controller
         return $this->success($res, 'Correos enviados');
     }
 
+
+   public function listarFuncionariosConHorarioPorFecha(string $fechaInicio, string $fechaFin)
+    {
+        $res = $this->asignaciones->listarFuncionariosPorRangoFechas($fechaInicio, $fechaFin);
+        return $this->success($res);
+    }
+
+
+
     public function enviarHorario(int $idFuncionario, Request $request)
     {
         $request->validate([
@@ -259,5 +269,23 @@ class HorarioController extends Controller
     {
         $anio = (int) $request->query('anio', date('Y'));
         return $this->success($this->asignaciones->dashboardCharts($anio));
+    }
+
+    public function enviarHorarioMasivo(Request $request)
+{
+    $request->validate([
+        'funcionarios_ids'    => 'required|array|min:1',
+        'funcionarios_ids.*'  => 'integer|exists:funcionario,idFuncionario',
+        'fechaInicio'         => 'nullable|date',
+        'fechaFin'            => 'nullable|date|after_or_equal:fechaInicio',
+    ]);
+
+    $res = $this->mail->enviarHorarioInstructorMasivo(
+        $request->input('funcionarios_ids'),
+        $request->input('fechaInicio'),
+        $request->input('fechaFin')
+    );
+
+    return $this->success($res, 'Proceso de envío masivo finalizado');
     }
 }

@@ -45,7 +45,7 @@ Route::get('listarDia', [DiaController::class, 'index']);
 Route::post('crearDia', [DiaController::class, 'store']);
 Route::put('editarDia/{idDia}', [DiaController::class, 'update']);
 Route::delete('eliminarDia/{idDia}', [DiaController::class, 'destroy']);
-
+Route::get('funcionariosPorRangoDeHorario/{fechaInicio}/{fechaFin}', [HorarioController::class, 'listarFuncionariosConHorarioPorFecha']);
 
 
 Route::get('listarTipoContrato', [TipoContratoController::class, 'index']);
@@ -178,4 +178,4 @@ Route::post('reportes/competencias-pendientes', [ReporteController::class, 'gene
 Route::get('reportes/descargar/{nombre}', [ReporteController::class, 'descargarReporte']);
 Route::post('/enviarHorario/{id}', [HorarioController::class, 'enviarHorario']);
 Route::post('enviarHorarioAprendiz/{id}', [HorarioController::class, 'enviarHorarioAprendiz']);
-
+Route::post('enviarHorarioMasivo',[HorarioController::class,'enviarHorarioMasivo']);

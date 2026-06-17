@@ -178,6 +178,13 @@
             margin-top: 4px;
             display: block;
         }
+        .clase-sede {
+            font-size: 10px;
+            color: #6366f1;
+            font-weight: 600;
+            margin-top: 4px;
+            display: block;
+        }
 
         /* ── Empty ── */
         .empty-row td {
@@ -314,6 +321,16 @@
                     
                                     @if ($ficha)
                                         <span class="clase-ficha">Ficha {{ $ficha }}</span>
+                                    @endif
+
+                                    @php
+                                        $sede      = $clase['sede'] ?? null;
+                                        $municipio = $clase['municipio'] ?? null;
+                                    @endphp
+                                    @if($sede || $municipio)
+                                        <span class="clase-sede">
+                                            📍 {{ $sede ?? '' }}@if($sede && $municipio) — @endif{{ $municipio ?? '' }}
+                                        </span>
                                     @endif
                     
                                     <span class="clase-ambiente">{{ $ambiente }}</span>

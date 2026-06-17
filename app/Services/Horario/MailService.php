@@ -16,7 +16,7 @@ class MailService
     ) {}
 
     private const RELACIONES = [
-        'bloque.dias', 'funcionario', 'ambiente', 'ficha.programa',
+        'bloque.dias', 'funcionario', 'ambiente', 'ficha.programa', 'ficha.sede.municipio',
     ];
 
     /**
@@ -145,4 +145,30 @@ class MailService
             return ['ok' => false, 'mensaje' => $e->getMessage()];
         }
     }
+
+    public function enviarHorarioInstructorMasivo(array $idsFuncionarios, ?string $fechaInicio = null, ?string $fechaFin = null): array
+{
+    $enviados = [];
+    $fallidos = [];
+
+    foreach ($idsFuncionarios as $idFuncionario) {
+        $res = $this->enviarHorarioInstructor($idFuncionario, $fechaInicio, $fechaFin);
+
+        if ($res['ok']) {
+            $enviados[] = $idFuncionario;
+        } else {
+            $fallidos[] = [
+                'idFuncionario' => $idFuncionario,
+                'motivo'        => $res['mensaje'],
+            ];
+        }
+    }
+
+    return [
+        'total_enviados' => count($enviados),
+        'total_fallidos' => count($fallidos),
+        'enviados'       => $enviados,
+        'fallidos'       => $fallidos,
+    ];
+}
 }

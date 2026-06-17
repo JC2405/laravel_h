@@ -166,6 +166,13 @@
             margin-top: 5px;
             display: block;
         }
+        .badge-sede {
+            font-size: 10px;
+            color: #6b7280;
+            font-weight: 600;
+            margin-top: 4px;
+            display: block;
+        }
 
         /* ── Empty ── */
         .empty-row td {
@@ -282,11 +289,6 @@
                     <td class="td-hora">{{ $franja }}</td>
                     @foreach ($dias as $dia)
                         <td>
-                            {{--
-                                CORRECCIÓN: la grilla del instructor tiene celdas como:
-                                ['ficha' => 'Ficha 3171062', 'programa' => '...', 'ambiente' => '...', ...]
-                                NO es un array anidado como la de aprendices.
-                            --}}
                             @if (!empty($celdas[$dia]))
                                 @php $celda = $celdas[$dia]; @endphp
                                 <div class="badge">
@@ -296,6 +298,11 @@
                                     <span class="badge-programa">
                                         {{ \Illuminate\Support\Str::limit($celda['programa'] ?? '', 38) }}
                                     </span>
+                                    @if(!empty($celda['sede']) || !empty($celda['municipio']))
+                                        <span class="badge-sede">
+                                            {{ $celda['sede'] ?? '' }}@if(!empty($celda['sede']) && !empty($celda['municipio'])) — @endif{{ $celda['municipio'] ?? '' }}
+                                        </span>
+                                    @endif
                                     <span class="badge-ambiente">
                                         {{ $celda['ambiente'] ?? 'Virtual' }}
                                     </span>

@@ -565,4 +565,26 @@ class AsignacionService
         'anio_consultado'    => $anio,
     ];
     }
+
+    public function listarFuncionariosPorRangoFechas(string $fechaInicio, string $fechaFin): array
+    {
+        return AsignacionModel::with(['funcionario', 'bloque.dias', 'ambiente', 'ficha.programa'])
+            ->whereHas('bloque', function ($q) use ($fechaInicio, $fechaFin) {
+                // Solapamiento: bloque se cruza con el rango si
+                // fechaInicio del bloque <= $fechaFin Y fechaFin del bloque >= $fechaInicio
+                $q->where('fechaInicio', '<=', $fechaFin)
+                  ->where('fechaFin',    '>=', $fechaInicio);
+            })
+            ->get()
+            ->groupBy('idFuncionario')
+            ->map(function ($asignaciones) {
+                $funcionario = $asignaciones->first()->funcionario;
+                return [
+                    'funcionario'  => $funcionario,
+                    'asignaciones' => $asignaciones->values(),
+                ];
+            })
+            ->values()
+            ->toArray();
+    }
 }
