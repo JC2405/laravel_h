@@ -13,6 +13,7 @@ class AreaService
     }
 
 
+
     public function create(array $data):AreaModel
     {
         return AreaModel::create($data);

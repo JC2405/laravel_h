@@ -18,6 +18,7 @@ class AreaController extends Controller
         $listarArea = $this->service->getAll();
         return response()->json($listarArea);
     }
+    
 
     public function listarAreasTransversales()
     {
