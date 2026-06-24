@@ -272,7 +272,7 @@ class HorarioController extends Controller
     }
 
     public function enviarHorarioMasivo(Request $request)
-{
+    {
     $request->validate([
         'funcionarios_ids'    => 'required|array|min:1',
         'funcionarios_ids.*'  => 'integer|exists:funcionario,idFuncionario',
