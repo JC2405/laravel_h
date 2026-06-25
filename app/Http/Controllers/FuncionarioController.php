@@ -33,23 +33,24 @@ class FuncionarioController extends Controller
 
 
 
-    public function obtenerInstructoresPorArea(int $idArea)
-    {
-            return FuncionarioModel::select(
-            'idFuncionario',
-            'nombre',
-            'apellido'
-        )
-        ->whereHas('areas', function ($query) use ($idArea) {
-            $query->where('area.idArea', $idArea);
-        })
-        ->with('areas:idArea,nombreArea')
-        ->orderBy('nombre')
-        ->get();
-
-    }
-
-
+public function obtenerInstructoresPorArea(int $idArea)
+{
+    return FuncionarioModel::select(
+        'idFuncionario',
+        'nombre',
+        'apellido',
+        'idTipoContrato'
+    )
+    ->whereHas('areas', function ($query) use ($idArea) {
+        $query->where('area.idArea', $idArea);
+    })
+    ->with([
+        'areas:idArea,nombreArea',
+        'tipoContrato:idTipoContrato,nombreTipoContrato'
+    ])
+    ->orderBy('nombre')
+    ->get();
+}
     /**
      * Store a newly created resource in storage.
      */
