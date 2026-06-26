@@ -14,11 +14,11 @@ return new class extends Migration
         Schema::create('programa', function (Blueprint $table) {
             $table->unsignedInteger('idPrograma')->autoIncrement();
             $table->string('nombre', 160);
-            $table->string('codigo', 40)->unique('uqProgramaCodigo');
+            $table->string('codigo', 40);
             $table->integer('version')->nullable();
             $table->string('estado',20)->default('Activo');
             $table->unsignedInteger('idTipoFormacion');
- 
+            $table->unique(['codigo', 'version'], 'uqProgramaCodigoVersion');
             $table->foreign('idTipoFormacion', 'fkProgramaTipoFormacion')
                   ->references('idTipoFormacion')->on('tipoFormacion')
                   ->onUpdate('cascade');

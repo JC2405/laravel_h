@@ -13,9 +13,16 @@ class ProgramaService
 
         public function create(array $data): ProgramaModel
     {
-        if (ProgramaModel::where('codigo', $data['codigo'])->exists()) {
-            throw new \Exception('El código de programa "' . $data['codigo'] . '" ya está registrado.');
-        }
+          if (
+        ProgramaModel::where('codigo', $data['codigo'])
+            ->where('version', $data['version'])
+            ->exists()
+    ) {
+        throw new \Exception(
+            'Ya existe un programa con el código "' . $data['codigo'] .
+            '" y la versión "' . $data['version'] . '".'
+        );
+    }
         return ProgramaModel::create($data);
     }
     
