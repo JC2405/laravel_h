@@ -25,6 +25,32 @@ class FichaService
         return FichaModel::create($data);
     }
 
+    public function buscarFichasPorFechaFin (string $fechaFin)
+    {
+        return FichaModel::with([
+            'programa.tipoFormacion',
+            'programa.area',
+            'asignaciones.ambiente.sede.municipio', 
+            'sede.municipio',
+        ]) -> where('fechaFin',"<=" ,$fechaFin)
+        ->get();
+    }
+
+
+    public function cambiarEstadoMasivamente(array $idFichas, string $estado): int
+    {
+        return FichaModel::whereIn('idFicha', $idFichas)
+            ->update([
+                'estado' => $estado
+            ]);
+    }
+
+    // Alias de compatibilidad
+    public function desactivarMasivamente(array $idFichas): int
+    {
+        return $this->cambiarEstadoMasivamente($idFichas, 'Inactivo');
+    }
+
    public function update(FichaModel $fichaModel, $data): FichaModel
     {
         if (FichaModel::where('codigoFicha', $data['codigoFicha'])

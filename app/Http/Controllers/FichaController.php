@@ -17,6 +17,30 @@ class FichaController extends Controller
     }
 
 
+    public function obtenerFichasPorFechaFin(string $fechaFin)
+    {
+        $listarFichasPorFechaFin = $this->service->buscarFichasPorFechaFin($fechaFin);
+        return response()->json($listarFichasPorFechaFin);
+    }
+
+    public function desactivarFichasMasivamente(Request $request)
+{
+    $request->validate([
+        'idFichas' => 'required|array',
+        'idFichas.*' => 'integer|exists:ficha,idFicha',
+        'estado' => 'nullable|string|in:Activo,Inactivo,ACTIVO,INACTIVO',
+    ]);
+
+    $estado = $request->input('estado', 'Inactivo');
+    $cantidad = $this->service->cambiarEstadoMasivamente($request->idFichas, $estado);
+
+    return response()->json([
+        'message' => "Estado cambiado a {$estado} correctamente.",
+        'cantidad' => $cantidad
+    ]);
+}
+
+
     public function index()
     {
         $listarFichas = $this->service->getAll();

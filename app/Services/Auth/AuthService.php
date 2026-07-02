@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Hash;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
 
+
 class AuthService
 {
     public function loginFuncionario(array $credentials): array

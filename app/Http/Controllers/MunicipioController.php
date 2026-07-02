@@ -13,8 +13,8 @@ class MunicipioController extends Controller
     
     public function index()
     {
-    $listarMunicipio = $this->service->getAll();
-    return response()->json($listarMunicipio);
+     $listarMunicipio = $this->service->getAll();
+     return response()->json($listarMunicipio);
     }
 
 

@@ -56,7 +56,7 @@ Route::delete('eliminarTipoContrato/{idTipoContrato}', [TipoContratoController::
 
 
 
-Route::get('listarMunicipio', [MunicipioController::class, 'index']);
+Route::get('listarMunicipio',[MunicipioController::class,'index']);
 Route::post('crearMunicipio', [MunicipioController::class, 'store']);
 Route::delete('eliminarMunicipio/{idMunicipio}', [MunicipioController::class, 'destroy']);
 Route::get('fichas/programa-municipio/{idMunicipio}', [FichaController::class, 'listarFichasProgramaMunicipio']);
@@ -108,6 +108,8 @@ Route::put('editarAmbiente/{idAmbiente}', [AmbienteController::class, 'update'])
 Route::delete('eliminarAmbiente/{idAmbiente}', [AmbienteController::class, 'destroy']);
 Route::post('/ambientes/disponibles', [AmbienteController::class, 'AmbientesDesocupadosPorFechaYHora']);
 
+Route::put('cambiarEstadoFichaMasivamente',[FichaController::class,'desactivarFichasMasivamente']);
+Route::get('listarPorFechaFin/{fechaFin}',[FichaController::class,'obtenerFichasPorFechaFin']);
 Route::get('listarFicha', [FichaController::class, 'index']);
 Route::post('crearFicha', [FichaController::class, 'store']);
 Route::put('editarFicha/{idFicha}', [FichaController::class, 'update']);
@@ -177,6 +179,6 @@ Route::post('reportes/competencias-pendientes', [ReporteController::class, 'gene
 
 // Descarga un .txt de reporte ya generado
 Route::get('reportes/descargar/{nombre}', [ReporteController::class, 'descargarReporte']);
-Route::post('/enviarHorario/{id}', [HorarioController::class, 'enviarHorario']);
+Route::post('enviarHorario/{id}', [HorarioController::class, 'enviarHorario']);
 Route::post('enviarHorarioAprendiz/{id}', [HorarioController::class, 'enviarHorarioAprendiz']);
 Route::post('enviarHorarioMasivo',[HorarioController::class,'enviarHorarioMasivo']);
