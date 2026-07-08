@@ -20,7 +20,7 @@ return [
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
-        'https://manejohorarioscimm.sgdis.cloud',
+        'https://manejohorarioscimm.SGDHis.cloud',
     ],
 
     'allowed_origins_patterns' => [],

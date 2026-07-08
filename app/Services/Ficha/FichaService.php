@@ -150,17 +150,25 @@ class FichaService
         ->values();
     }
 
-    public function obtenerFichasPorSede(int $idSede)
+   public function obtenerFichasPorSede(int $idSede)
     {
-        return FichaModel::with([
-                'programa.tipoFormacion',
-                'programa.area',
-                'sede.municipio',
-            ])
-            ->where('idSede', $idSede)
-            ->where('estado', 'Activo')
-            ->orderBy('codigoFicha')
-            ->get();
+    return FichaModel::select(
+            'ficha.*',
+            'tipoFormacion.idTipoFormacion',
+            'tipoFormacion.nombreTipoFormacion',
+            'tipoFormacion.duracionMeses'
+        )
+        ->with([
+            'programa.tipoFormacion',
+            'programa.area',
+            'sede.municipio',
+        ])
+        ->join('programa', 'programa.idPrograma', '=', 'ficha.idPrograma')
+        ->join('tipoFormacion', 'tipoFormacion.idTipoFormacion', '=', 'programa.idTipoFormacion')
+        ->where('ficha.idSede', $idSede)
+        ->where('ficha.estado', 'Activo')
+        ->orderBy('ficha.codigoFicha')
+        ->get();
     }
 
 
