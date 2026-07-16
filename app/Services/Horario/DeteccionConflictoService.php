@@ -220,4 +220,54 @@ public function detectarConflictoTitulada(
         )
         ->first();
 }
+// =========================================================================
+//  CONFLICTO DE TRANSVERSAL POR FICHA
+// =========================================================================
+
+/**
+ * Una ficha NO puede tener dos bloques "transversal" que se solapen
+ * en fechas Y en horas al mismo tiempo.
+ *
+ * A diferencia de "titulada", aquí SÍ es el solapamiento clásico:
+ * si las fechas se cruzan y las horas se cruzan → conflicto.
+ *
+ * Una transversal SÍ puede coexistir con una titulada en el mismo horario,
+ * por eso filtramos explícitamente por tipoFormacion = 'transversal'
+ * (solo comparamos contra otros bloques transversales de la misma ficha).
+ */
+public function detectarConflictoTransversal(
+    int     $idFicha,
+    string  $horaInicio,
+    string  $horaFin,
+    string  $fechaInicio,
+    string  $fechaFin,
+    ?int    $excluirBloque = null
+) {
+    return DB::table('bloque as blq')
+        ->join('asignacion as asig', 'asig.idAsignacion', '=', 'blq.idAsignacion')
+        ->join('ficha as f',         'f.idFicha',         '=', 'asig.idFicha')
+
+        ->where('asig.idFicha', $idFicha)
+        ->whereRaw("LOWER(blq.tipoFormacion) = 'transversal'")
+
+        // Solapamiento de fechas
+        ->where('blq.fechaInicio', '<=', $fechaFin)
+        ->where('blq.fechaFin',    '>=', $fechaInicio)
+
+        // Solapamiento de horas (el clásico, igual que instructor/ambiente)
+        ->where('blq.horaInicio', '<', $horaFin)
+        ->where('blq.horaFin',    '>', $horaInicio)
+
+        ->when($excluirBloque, fn($q) => $q->where('blq.idBloque', '!=', $excluirBloque))
+
+        ->select(
+            'blq.idBloque',
+            'blq.horaInicio',
+            'blq.horaFin',
+            'blq.fechaInicio',
+            'blq.fechaFin',
+            'f.codigoFicha',
+        )
+        ->first();
+}
 }

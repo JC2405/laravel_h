@@ -371,92 +371,119 @@ class AsignacionService
     // CONFLICTOS
     // ================================
     private function verificarConflictos(array $datos): void
-    {
-        $conflictoInstructor = $this->conflictos->detectarConflictoInstructor(
-            $datos['idInstructor'],
+{
+    $conflictoInstructor = $this->conflictos->detectarConflictoInstructor(
+        $datos['idInstructor'],
+        $datos['horaInicioClase'],
+        $datos['horaFinClase'],
+        $datos['diasDeLaSemana'],
+        $datos['fechaInicioPeriodo'],
+        $datos['fechaFinPeriodo'],
+        excluirBloque: $datos['excluirBloque'] ?? null,
+        excluirFicha: $datos['idFicha']
+    );
+
+    if ($conflictoInstructor) {
+        throw new ConflictoException(
+            tipo:        'conflicto_instructor',
+            mensaje:     sprintf(
+                "El instructor %s ya está asignado en la ficha %s en el horario %s - %s",
+                $conflictoInstructor->instructor_nombre,
+                $conflictoInstructor->codigoFicha,
+                $conflictoInstructor->horaInicio,
+                $conflictoInstructor->horaFin
+            ),
+            codigoFicha: $conflictoInstructor->codigoFicha,
+            idBloque:    $conflictoInstructor->idBloque,
+            horaInicio:  $conflictoInstructor->horaInicio,
+            horaFin:     $conflictoInstructor->horaFin,
+        );
+    }
+
+    if (!empty($datos['idAmbiente'])) {
+        $conflictoAmbiente = $this->conflictos->detectarConflictoAmbiente(
+            $datos['idAmbiente'],
             $datos['horaInicioClase'],
             $datos['horaFinClase'],
             $datos['diasDeLaSemana'],
             $datos['fechaInicioPeriodo'],
             $datos['fechaFinPeriodo'],
-            excluirBloque: $datos['excluirBloque'] ?? null,
-            excluirFicha: $datos['idFicha']
+            excluirFicha: $datos['idFicha'],
+            excluirBloque: $datos['excluirBloque'] ?? null
         );
 
-        if ($conflictoInstructor) {
+        if ($conflictoAmbiente) {
             throw new ConflictoException(
-                tipo:        'conflicto_instructor',
+                tipo:        'conflicto_ambiente',
                 mensaje:     sprintf(
-                    "El instructor %s ya está asignado en la ficha %s en el horario %s - %s",
-                    $conflictoInstructor->instructor_nombre,
-                    $conflictoInstructor->codigoFicha,
-                    $conflictoInstructor->horaInicio,
-                    $conflictoInstructor->horaFin
+                    "El ambiente está ocupado en la ficha %s en el horario %s - %s",
+                    $conflictoAmbiente->codigoFicha,
+                    $conflictoAmbiente->horaInicio,
+                    $conflictoAmbiente->horaFin
                 ),
-                codigoFicha: $conflictoInstructor->codigoFicha,
-                idBloque:    $conflictoInstructor->idBloque,
-                horaInicio:  $conflictoInstructor->horaInicio,
-                horaFin:     $conflictoInstructor->horaFin,
+                codigoFicha: $conflictoAmbiente->codigoFicha,
+                idBloque:    $conflictoAmbiente->idBloque,
+                horaInicio:  $conflictoAmbiente->horaInicio,
+                horaFin:     $conflictoAmbiente->horaFin,
             );
         }
-
-        if (!empty($datos['idAmbiente'])) {
-            $conflictoAmbiente = $this->conflictos->detectarConflictoAmbiente(
-                $datos['idAmbiente'],
-                $datos['horaInicioClase'],
-                $datos['horaFinClase'],
-                $datos['diasDeLaSemana'],
-                $datos['fechaInicioPeriodo'],
-                $datos['fechaFinPeriodo'],
-                excluirFicha: $datos['idFicha'],
-                excluirBloque: $datos['excluirBloque'] ?? null
-            );
-
-            if ($conflictoAmbiente) {
-                throw new ConflictoException(
-                    tipo:        'conflicto_ambiente',
-                    mensaje:     sprintf(
-                        "El ambiente está ocupado en la ficha %s en el horario %s - %s",
-                        $conflictoAmbiente->codigoFicha,
-                        $conflictoAmbiente->horaInicio,
-                        $conflictoAmbiente->horaFin
-                    ),
-                    codigoFicha: $conflictoAmbiente->codigoFicha,
-                    idBloque:    $conflictoAmbiente->idBloque,
-                    horaInicio:  $conflictoAmbiente->horaInicio,
-                    horaFin:     $conflictoAmbiente->horaFin,
-                );
-            }
-        }
-         if (strtolower(trim($datos['tipoFormacion'] ?? '')) === 'titulada') {
-
-          $conflictoTipoFormacion = $this->conflictos->detectarConflictoTitulada(
-              $datos['idFicha'],
-              $datos['horaInicioClase'],
-              $datos['horaFinClase'],
-              $datos['fechaInicioPeriodo'],
-              $datos['fechaFinPeriodo'],
-              excluirBloque: $datos['excluirBloque'] ?? null
-          );
-
-           if ($conflictoTipoFormacion) {
-                throw new ConflictoException(
-                    tipo:        'conflicto_ambiente',  
-                    mensaje:     sprintf(
-                        "La ficha %s ya tiene asignado formacion Titulada en el horario %s - %s",
-                        $conflictoTipoFormacion->codigoFicha,
-                        $conflictoTipoFormacion->horaInicio,
-                        $conflictoTipoFormacion->horaFin
-                        
-                    ),
-                    codigoFicha: $conflictoTipoFormacion->codigoFicha,
-                    idBloque:    $conflictoTipoFormacion->idBloque,
-                    horaInicio:  $conflictoTipoFormacion->horaInicio,
-                    horaFin:     $conflictoTipoFormacion->horaFin,
-                );
-            }
-      }
     }
+
+    if (strtolower(trim($datos['tipoFormacion'] ?? '')) === 'titulada') {
+
+        $conflictoTipoFormacion = $this->conflictos->detectarConflictoTitulada(
+            $datos['idFicha'],
+            $datos['horaInicioClase'],
+            $datos['horaFinClase'],
+            $datos['fechaInicioPeriodo'],
+            $datos['fechaFinPeriodo'],
+            excluirBloque: $datos['excluirBloque'] ?? null
+        );
+
+        if ($conflictoTipoFormacion) {
+            throw new ConflictoException(
+                tipo:        'conflicto_titulada',
+                mensaje:     sprintf(
+                    "La ficha %s ya tiene asignado formacion Titulada en el horario %s - %s",
+                    $conflictoTipoFormacion->codigoFicha,
+                    $conflictoTipoFormacion->horaInicio,
+                    $conflictoTipoFormacion->horaFin
+                ),
+                codigoFicha: $conflictoTipoFormacion->codigoFicha,
+                idBloque:    $conflictoTipoFormacion->idBloque,
+                horaInicio:  $conflictoTipoFormacion->horaInicio,
+                horaFin:     $conflictoTipoFormacion->horaFin,
+            );
+        }
+
+    } elseif (strtolower(trim($datos['tipoFormacion'] ?? '')) === 'transversal') {
+
+        $conflictoTransversal = $this->conflictos->detectarConflictoTransversal(
+            $datos['idFicha'],
+            $datos['horaInicioClase'],
+            $datos['horaFinClase'],
+            $datos['fechaInicioPeriodo'],
+            $datos['fechaFinPeriodo'],
+            excluirBloque: $datos['excluirBloque'] ?? null
+        );
+
+        if ($conflictoTransversal) {
+            throw new ConflictoException(
+                tipo:        'conflicto_transversal',
+                mensaje:     sprintf(
+                    "La ficha %s ya tiene una formación Transversal asignada en el horario %s - %s",
+                    $conflictoTransversal->codigoFicha,
+                    $conflictoTransversal->horaInicio,
+                    $conflictoTransversal->horaFin
+                ),
+                codigoFicha: $conflictoTransversal->codigoFicha,
+                idBloque:    $conflictoTransversal->idBloque,
+                horaInicio:  $conflictoTransversal->horaInicio,
+                horaFin:     $conflictoTransversal->horaFin,
+            );
+        }
+    }
+}
 
     public function validarFechasDentroDeFicha(array $datos): ?array
     {
