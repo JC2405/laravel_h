@@ -270,8 +270,15 @@ class AsignacionService
 
     public function listarClasesPorInstructor(int $idInstructor): array
     {
-        $asignaciones = AsignacionModel::with(['bloque.dias', 'funcionario', 'ambiente', 'ficha.programa'])
+        $asignaciones = AsignacionModel::with([
+                'bloque.dias',
+                'funcionario',
+                'ambiente.sede.municipio',
+                'ficha.programa',
+                'ficha.sede.municipio',
+            ])
             ->where('idFuncionario', $idInstructor)
+            ->orderByDesc('idAsignacion')
             ->get();
 
         return [

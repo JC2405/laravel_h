@@ -14,6 +14,7 @@ use App\Http\Controllers\FuncionarioController;
 use App\Http\Controllers\HorarioController;
 use App\Http\Controllers\MunicipioController;
 use App\Http\Controllers\ProgramaController;
+use App\Http\Controllers\RecuperacionPasswordController;
 use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\ResultadoController;
 use App\Http\Controllers\SedeController;
@@ -182,3 +183,6 @@ Route::get('reportes/descargar/{nombre}', [ReporteController::class, 'descargarR
 Route::post('enviarHorario/{id}', [HorarioController::class, 'enviarHorario']);
 Route::post('enviarHorarioAprendiz/{id}', [HorarioController::class, 'enviarHorarioAprendiz']);
 Route::post('enviarHorarioMasivo',[HorarioController::class,'enviarHorarioMasivo']);
+
+Route::post('recuperarPassword',[RecuperacionPasswordController::class, 'enviarCorreoRecuperacionPassword']);
+Route::post('cambiarPassword',[RecuperacionPasswordController::class, 'cambiarPassword']);

@@ -1,13 +1,17 @@
 <?php
 
 namespace App\Services\Horario;
-
+use Illuminate\Support\Facades\Hash;
 use App\Mail\HorarioAprendizMail;
 use App\Mail\HorarioInstructorMail;
+use App\Mail\RecuperacionPasswordMail;
 use App\Models\AprendizModel;
 use App\Models\AsignacionModel;
 use App\Models\FuncionarioModel;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
+use Carbon\Carbon;
 
 class MailService
 {
@@ -171,4 +175,116 @@ class MailService
         'fallidos'       => $fallidos,
     ];
 }
+
+
+    public function enviarRecuperacionPassword(string $correo): array
+{
+    return $this->intentar(function () use ($correo) {
+
+        // Buscar el funcionario
+        $funcionario = FuncionarioModel::where('correo', $correo)->first();
+
+        if (!$funcionario) {
+            return [
+                'ok' => false,
+                'mensaje' => 'No existe un funcionario con ese correo.'
+            ];
+        }
+
+        // Generar token
+        $token = Str::random(64);
+
+        // Guardarlo en la BD
+        DB::table('password_reset_tokens')->updateOrInsert(
+            ['correo' => $correo],
+            [
+                'token' => hash('sha256', $token),
+                'created_at' => now(),
+            ]
+        );
+
+     
+        $link = env('FRONTEND_URL') . "/index.html?token=" . $token;
+
+      
+        Mail::to($correo)->send(
+            new RecuperacionPasswordMail($funcionario, $link)
+        );
+
+        return [
+            'ok' => true,
+            'mensaje' => 'Se envió un correo para recuperar la contraseña.'
+        ];
+    });
+}
+
+    public function cambiarPassword(string $token, string $password): array
+{
+    return $this->intentar(function () use ($token, $password) {
+
+        // Buscar el token
+        $registro = DB::table('password_reset_tokens')
+            ->where('token', hash('sha256', $token))
+            ->first();
+
+        if (!$registro) {
+            return [
+                'ok' => false,
+                'mensaje' => 'El enlace no es válido.'
+            ];
+        }
+
+        // Verificar expiración (1 hora)
+        if (Carbon::parse($registro->created_at)->addHour()->isPast()) {
+
+            DB::table('password_reset_tokens')
+                ->where('correo', $registro->correo)
+                ->delete();
+
+            return [
+                'ok' => false,
+                'mensaje' => 'El enlace ha expirado.'
+            ];
+        }
+
+        // Buscar el funcionario
+        $funcionario = FuncionarioModel::where('correo', $registro->correo)->first();
+
+        if (!$funcionario) {
+
+            DB::table('password_reset_tokens')
+                ->where('correo', $registro->correo)
+                ->delete();
+
+            return [
+                'ok' => false,
+                'mensaje' => 'El funcionario no existe.'
+            ];
+        }
+
+        // Verificar que la nueva contraseña sea diferente
+        if (Hash::check($password, $funcionario->password)) {
+            return [
+                'ok' => false,
+                'mensaje' => 'La nueva contraseña debe ser diferente a la anterior.'
+            ];
+        }
+
+        // Actualizar contraseña
+        // El modelo FuncionarioModel tiene cast 'hashed' en password,
+        // por lo que se hashea automáticamente al asignar el valor plano.
+        $funcionario->password = $password;
+        $funcionario->save();
+
+        // Eliminar el token
+        DB::table('password_reset_tokens')
+            ->where('correo', $registro->correo)
+            ->delete();
+
+        return [
+            'ok' => true,
+            'mensaje' => 'La contraseña fue actualizada correctamente.'
+        ];
+    });
+    }
 }

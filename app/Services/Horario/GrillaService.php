@@ -5,7 +5,7 @@ namespace App\Services\Horario;
 class GrillaService
 {
     public const RELACIONES = [
-        'bloque.dias', 'funcionario', 'ambiente', 'ficha.programa', 'ficha.sede.municipio',
+        'bloque.dias', 'funcionario', 'ambiente.sede.municipio', 'ficha.programa', 'ficha.sede.municipio',
     ];
 
     public function construirGrillaParaFicha($asignaciones): array
@@ -45,14 +45,15 @@ class GrillaService
     public function construirGrillaParaAprendices($asignaciones): array
     {
         return $this->construirGrilla($asignaciones, function ($asignacion, $bloque) {
+            $sedeObj = $asignacion->ambiente?->sede ?? $asignacion->ficha?->sede;
             return [
                 'ficha'        => $asignacion->ficha?->numero ?? '—',
                 'programa'     => $asignacion->ficha?->programa?->nombre ?? '—',
                 'instructor'   => $asignacion->funcionario?->nombre ?? '—',
                 'ambiente'     => $this->formatearAmbiente($asignacion),
                 'modalidad'    => $asignacion->modalidad,
-                'sede'         => $asignacion->ficha?->sede?->nombre ?? null,
-                'municipio'    => $asignacion->ficha?->sede?->municipio?->nombreMunicipio ?? null,
+                'sede'         => $sedeObj?->nombre ?? null,
+                'municipio'    => $sedeObj?->municipio?->nombreMunicipio ?? null,
                 'fechaInicio'  => $bloque->fechaInicio,
                 'fechaFin'     => $bloque->fechaFin,
                 'idBloque'     => $bloque->idBloque,
@@ -64,13 +65,14 @@ class GrillaService
     public function construirGrillaParaInstructor($asignaciones): array
     {
         return $this->construirGrilla($asignaciones, function ($asignacion, $bloque) {
+            $sedeObj = $asignacion->ambiente?->sede ?? $asignacion->ficha?->sede;
             return [
                 'ficha'        => $asignacion->ficha ? 'Ficha ' . $asignacion->ficha->codigoFicha : '—',
                 'programa'     => $asignacion->ficha?->programa?->nombre ?? '—',
                 'ambiente'     => $asignacion->ambiente?->codigo ?? '-',
                 'modalidad'    => $asignacion->modalidad,
-                'sede'         => $asignacion->ficha?->sede?->nombre ?? null,
-                'municipio'    => $asignacion->ficha?->sede?->municipio?->nombreMunicipio ?? null,
+                'sede'         => $sedeObj?->nombre ?? null,
+                'municipio'    => $sedeObj?->municipio?->nombreMunicipio ?? null,
                 'fechaInicio'  => $bloque->fechaInicio,
                 'fechaFin'     => $bloque->fechaFin,
                 'idBloque'     => $bloque->idBloque,
